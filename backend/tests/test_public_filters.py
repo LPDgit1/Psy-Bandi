@@ -39,7 +39,7 @@ def _opportunity(
     )
 
 
-def test_default_public_filter_hides_review_items_without_deadline() -> None:
+def test_default_public_filter_includes_review_items_without_deadline() -> None:
     open_item = _opportunity(
         title="Avviso psicologo aperto",
         region="Basilicata",
@@ -86,7 +86,7 @@ def test_default_public_filter_hides_review_items_without_deadline() -> None:
         featured=None,
     )
 
-    assert default_results == [open_item]
+    assert default_results == [open_item, review_item]
     assert missing_deadline_results == [review_item]
 
 

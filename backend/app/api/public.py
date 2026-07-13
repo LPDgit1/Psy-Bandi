@@ -27,7 +27,7 @@ from app.services.deadline_status import refresh_deadline_statuses
 from app.services.public_refresh import get_public_refresh_status, queue_public_refresh
 
 router = APIRouter(prefix="/api/public", tags=["public"])
-DEFAULT_PUBLIC_STATUSES = {"open", "closing_soon"}
+DEFAULT_PUBLIC_STATUSES = {"open", "closing_soon", "review"}
 
 
 def _source_name(opportunity: Opportunity) -> str | None:
