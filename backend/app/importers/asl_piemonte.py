@@ -34,7 +34,6 @@ ASL_PIEMONTE_SOURCE_NAMES = {
     "ASL CN2 - Bandi di concorso",
     "ASL Citta di Torino - Concorsi pubblici",
     "ASL NO - Portale concorsi",
-    "ASL TO3 - Portale trasparenza",
     "ASL TO4 - Concorsi",
     "ASL TO5 - Bandi di concorso",
     "ASL VC - Concorsi",

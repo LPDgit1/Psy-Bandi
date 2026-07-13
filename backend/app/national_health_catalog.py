@@ -62,15 +62,6 @@ NATIONAL_HEALTH_SOURCE_DEFINITIONS = [
         "technical_notes": "Ricerca pubblica sul sito ufficiale ASP.",
     },
     {
-        "name": "ASP Vibo Valentia - Ricerca concorsi psicologia",
-        "source_type": "html-list",
-        "base_url": "https://www.aspvv.it/?s=psicolog",
-        "region": "Calabria",
-        "organization": "ASP Vibo Valentia",
-        "import_method": "html-list-search",
-        "technical_notes": "Ricerca pubblica sul sito ufficiale ASP.",
-    },
-    {
         "name": "ASL Napoli 2 Nord - Ricerca concorsi psicologia",
         "source_type": "html-list",
         "base_url": "https://www.aslnapoli2nord.it/?s=psicolog",
@@ -367,6 +358,16 @@ NON_AUTOMATED_HEALTH_SOURCE_DEFINITIONS = [
         "reason": (
             "Equivalente regionale individuato, ma nessuna fonte concorsi pubblica "
             "stabile e risolvibile e stata confermata per import automatico."
+        ),
+    },
+    {
+        "name": "ASP Vibo Valentia - Ricerca concorsi psicologia",
+        "base_url": "https://www.aspvv.it/?s=psicolog",
+        "region": "Calabria",
+        "organization": "ASP Vibo Valentia",
+        "reason": (
+            "Verifica manuale: il portale risponde 403 agli accessi automatici; "
+            "serve un endpoint o adapter compatibile."
         ),
     },
 ]

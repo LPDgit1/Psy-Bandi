@@ -25,7 +25,7 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "Policlinico San Martino - Concorsi",
         "source_type": "hospital-html-hub",
-        "base_url": "https://www.ospedalesanmartino.it/concorsi.html",
+        "base_url": "https://www.ospedalesanmartino.it/it/bandi",
         "region": "Liguria",
         "organization": "IRCCS Ospedale Policlinico San Martino",
         "import_method": "hospital-html-hub-pending-adapter",
@@ -108,7 +108,7 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "AOU Siena - Concorsi",
         "source_type": "hospital-html-hub",
-        "base_url": "https://www.ao-siena.toscana.it/index.php/concorsi",
+        "base_url": "https://www.ao-siena.toscana.it/avvisi-e-bandi/",
         "region": "Toscana",
         "organization": "Azienda Ospedaliero Universitaria Senese",
         "import_method": "hospital-html-hub-pending-adapter",
@@ -144,7 +144,10 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "INRCA - Concorsi",
         "source_type": "hospital-html-hub",
-        "base_url": "https://www.inrca.it/inrca/concorsi.asp",
+        "base_url": (
+            "https://www.inrca.it/INRCA/MODTRASP52/"
+            "?Pag=tra_Isti_Concorsi_EspletatiX&mnu=78"
+        ),
         "region": "Marche",
         "organization": "INRCA IRCCS",
         "import_method": "hospital-html-hub-pending-adapter",
@@ -198,7 +201,7 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "AO Cosenza - Bandi di concorso",
         "source_type": "hospital-html-hub",
-        "base_url": "https://www.aocs.it/bandi-di-concorso/",
+        "base_url": "https://aocosenza.it/bandi/concorsi/",
         "region": "Calabria",
         "organization": "Azienda Ospedaliera di Cosenza",
         "import_method": "hospital-html-hub-pending-adapter",
@@ -207,7 +210,7 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "AOU Renato Dulbecco - Bandi di concorso",
         "source_type": "hospital-html-hub",
-        "base_url": "https://www.aou-dulbecco.it/amministrazione-trasparente/bandi-di-concorso/",
+        "base_url": "https://www.aourenatodulbecco.it/bandi-e-concorsi/",
         "region": "Calabria",
         "organization": "AOU Renato Dulbecco",
         "import_method": "hospital-html-hub-pending-adapter",
@@ -216,7 +219,10 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "GOM Reggio Calabria - Bandi di concorso",
         "source_type": "hospital-html-hub",
-        "base_url": "https://www.gomrc.it/amministrazione-trasparente/bandi-di-concorso/",
+        "base_url": (
+            "https://www.gomrc.it/doc/amministrazione-trasparente/"
+            "bandi-di-concorso.html"
+        ),
         "region": "Calabria",
         "organization": "Grande Ospedale Metropolitano Reggio Calabria",
         "import_method": "hospital-html-hub-pending-adapter",

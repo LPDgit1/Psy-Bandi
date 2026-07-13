@@ -82,13 +82,13 @@ NORTHERN_HEALTH_SOURCE_DEFINITIONS = [
     },
     {
         "name": "ASL TO3 - Portale trasparenza",
-        "source_type": "external-transparency",
+        "source_type": "health-access-review",
         "base_url": (
             "https://trasparenzaap.aslto3.piemonte.it/web/trasparenza/trasparenza"
         ),
         "region": "Piemonte",
         "organization": "ASL TO3",
-        "import_method": "external-transparency-pending-tls-review",
+        "import_method": "health-access-review",
         "technical_notes": (
             "Portale pubblico collegato dal sito aziendale. Dal container la "
             "catena TLS remota risulta incompleta: mantenere lo stato tls-review "

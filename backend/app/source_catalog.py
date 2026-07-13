@@ -888,17 +888,17 @@ ADDITIONAL_MUNICIPAL_SOURCE_DEFINITIONS = [
     },
     {
         "name": "Comune di Milano - Bandi di concorso",
-        "source_type": "external-transparency",
+        "source_type": "municipal-access-review",
         "base_url": (
-            "https://www.comune.milano.it/comune/amministrazione-trasparente/"
+            "https://www.comune.milano.it/amministrazione/amministrazione-trasparente/"
             "bandi-di-concorso"
         ),
         "region": "Lombardia",
         "organization": "Comune di Milano",
-        "import_method": "external-transparency-review",
+        "import_method": "municipal-access-review",
         "technical_notes": (
-            "URL pubblico istituzionale, ma i probe automatici ricevono 403. "
-            "Richiede adapter dedicato o endpoint aperto prima dell'import."
+            "Pagina pubblica aggiornata, ma il portale risponde 403 agli accessi "
+            "automatici. Fonte mantenuta per revisione di un endpoint compatibile."
         ),
     },
     {
@@ -942,21 +942,27 @@ ADDITIONAL_MUNICIPAL_SOURCE_DEFINITIONS = [
     },
     {
         "name": "Comune di Rieti - Bandi di concorso",
-        "source_type": "html-list",
-        "base_url": "https://comune.rieti.it/concorsi/",
+        "source_type": "external-transparency",
+        "base_url": (
+            "https://lnx.comune.rieti.it/amministrazione-trasparente/content/"
+            "bandi-di-concorso"
+        ),
         "region": "Lazio",
         "organization": "Comune di Rieti",
-        "import_method": "html-list-pending-adapter",
-        "technical_notes": "Pagina pubblica concorsi del Comune.",
+        "import_method": "external-transparency-pending-adapter",
+        "technical_notes": "Pagina pubblica Amministrazione Trasparente del Comune.",
     },
     {
         "name": "Comune di Viterbo - Bandi di concorso",
-        "source_type": "html-list",
-        "base_url": "https://comune.viterbo.it/concorsi/",
+        "source_type": "municipal-access-review",
+        "base_url": "https://comune.viterbo.it/argomento/concorsi/",
         "region": "Lazio",
         "organization": "Comune di Viterbo",
-        "import_method": "html-list-pending-adapter",
-        "technical_notes": "Pagina pubblica concorsi del Comune.",
+        "import_method": "municipal-access-review",
+        "technical_notes": (
+            "Pagina pubblica concorsi protetta da una verifica anti-bot. Fonte "
+            "mantenuta per revisione di un endpoint o adapter compatibile."
+        ),
     },
     {
         "name": "Comune di Avellino - Bandi di concorso",
@@ -1048,13 +1054,16 @@ ADDITIONAL_MUNICIPAL_SOURCE_DEFINITIONS = [
     {
         "name": "Comune di Barletta - Amministrazione Trasparente",
         "source_type": "external-transparency",
-        "base_url": "https://barletta.trasparenza-valutazione-merito.it/",
+        "base_url": (
+            "https://trasparenza.comune.barletta.bt.it/"
+            "pagina639_bandi-di-concorso.html"
+        ),
         "region": "Puglia",
         "organization": "Comune di Barletta",
-        "import_method": "external-transparency-review",
+        "import_method": "external-transparency-pending-adapter",
         "technical_notes": (
-            "Portale trasparenza individuato, ma il probe automatico riceve 403. "
-            "Richiede revisione tecnica prima dell'import."
+            "Pagina pubblica aggiornata di Amministrazione Trasparente, gestita "
+            "dall'adapter HTML profondo."
         ),
     },
     {

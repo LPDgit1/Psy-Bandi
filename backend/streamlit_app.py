@@ -379,7 +379,7 @@ def main() -> None:
     generated_at = datetime.fromisoformat(catalog.snapshot.generated_at)
     st.caption(
         f"Dati aggiornati al {format_datetime(generated_at)} · "
-        f"{catalog.snapshot.source_count} fonti pubbliche"
+        f"{catalog.snapshot.source_count} fonti con risultati pubblicati"
     )
 
     filters = _render_sidebar(facets)

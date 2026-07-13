@@ -6,7 +6,25 @@ from sqlalchemy.orm import Session
 
 from app.central_health_catalog import CENTRAL_HEALTH_SOURCE_DEFINITIONS
 from app.hospital_health_catalog import HOSPITAL_HEALTH_SOURCE_DEFINITIONS
-from app.importers.catalog_sources import _entity_type
+from app.importers.arcs_fvg import ARCS_FVG_SOURCE_NAME
+from app.importers.asdaa_alto_adige import ASDAA_SOURCE_NAME
+from app.importers.asl_piemonte import ASL_PIEMONTE_SOURCE_NAMES
+from app.importers.asl_roma2 import ASL_ROMA2_SOURCE_NAME
+from app.importers.ast_marche import AST_MARCHE_SOURCE_NAMES
+from app.importers.asuit_trentino import ASUIT_SOURCE_NAME
+from app.importers.ats_liguria import ATS_LIGURIA_SOURCE_NAME
+from app.importers.ausl_romagna import AUSL_ROMAGNA_SOURCE_NAME
+from app.importers.azienda_zero import AZIENDA_ZERO_SOURCE_NAME
+from app.importers.azienda_zero_piemonte import AZIENDA_ZERO_PIEMONTE_SOURCE_NAME
+from app.importers.catalog_sources import SPECIFIC_ADAPTER_SOURCE_NAMES, _entity_type
+from app.importers.comune_venezia import COMUNE_VENEZIA_SOURCE_NAME
+from app.importers.inail import INAIL_SOURCE_NAME
+from app.importers.inpa import INPA_SOURCE_NAME
+from app.importers.inps import INPS_SOURCE_NAME
+from app.importers.myportal_veneto import TREVISO
+from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES
+from app.importers.usl_umbria1 import USL_UMBRIA1_SOURCE_NAME
+from app.importers.usl_umbria2 import USL_UMBRIA2_SOURCE_NAME
 from app.ministerial_catalog import MINISTERIAL_SOURCE_DEFINITIONS
 from app.models import Base, Source
 from app.national_health_catalog import (
@@ -16,6 +34,7 @@ from app.national_health_catalog import (
 from app.northern_health_catalog import NORTHERN_HEALTH_SOURCE_DEFINITIONS
 from app.puglia_aol_catalog import PUGLIA_AOL_SOURCE_DEFINITIONS
 from app.scripts.audit_sources import adapter_family
+from app.services.import_pipeline import PUBLIC_REFRESH_IMPORTERS
 from app.services.source_probe import (
     _probe_failure_status,
     _probe_success_status,
@@ -109,6 +128,117 @@ def test_every_catalogued_source_has_an_adapter_or_explicit_access_review() -> N
     ]
 
     assert unassigned == []
+
+
+def test_access_blocked_sources_are_explicitly_routed_to_review() -> None:
+    review_sources = {
+        candidate["name"]
+        for candidate in VERIFIED_SOURCE_CATALOG
+        if adapter_family(Source(**candidate, status="catalogued")) == "access-review"
+    }
+
+    assert review_sources == {
+        "ASL TO3 - Portale trasparenza",
+        "Comune di Milano - Bandi di concorso",
+        "Comune di Viterbo - Bandi di concorso",
+        "MAECI - Lavora con noi e opportunita",
+    }
+
+
+def test_specific_adapter_registry_matches_implemented_connectors() -> None:
+    implemented_connector_sources = {
+        ARCS_FVG_SOURCE_NAME,
+        ASDAA_SOURCE_NAME,
+        ASL_ROMA2_SOURCE_NAME,
+        ASUIT_SOURCE_NAME,
+        ATS_LIGURIA_SOURCE_NAME,
+        AUSL_ROMAGNA_SOURCE_NAME,
+        AZIENDA_ZERO_SOURCE_NAME,
+        AZIENDA_ZERO_PIEMONTE_SOURCE_NAME,
+        COMUNE_VENEZIA_SOURCE_NAME,
+        INAIL_SOURCE_NAME,
+        INPA_SOURCE_NAME,
+        INPS_SOURCE_NAME,
+        TREVISO.source_name,
+        USL_UMBRIA1_SOURCE_NAME,
+        USL_UMBRIA2_SOURCE_NAME,
+        *ASL_PIEMONTE_SOURCE_NAMES,
+        *AST_MARCHE_SOURCE_NAMES,
+        *TARGET_HEALTH_SOURCE_NAMES,
+    }
+
+    assert SPECIFIC_ADAPTER_SOURCE_NAMES == implemented_connector_sources
+
+
+def test_every_adapter_family_is_scheduled_for_public_refresh() -> None:
+    scheduled_importers = {
+        importer.__name__ for _label, importer in PUBLIC_REFRESH_IMPORTERS
+    }
+
+    assert {
+        "run_arcs_fvg_import",
+        "run_asdaa_alto_adige_import",
+        "run_asl_piemonte_import",
+        "run_asl_roma2_import",
+        "run_ast_marche_import",
+        "run_asuit_trentino_import",
+        "run_ats_liguria_import",
+        "run_ausl_romagna_import",
+        "run_azienda_zero_import",
+        "run_azienda_zero_piemonte_import",
+        "run_catalog_sources_import",
+        "run_comune_venezia_import",
+        "run_deep_html_sources_import",
+        "run_inail_import",
+        "run_inps_import",
+        "run_myportal_treviso_import",
+        "run_puglia_aol_import",
+        "run_target_health_html_import",
+        "run_usl_umbria1_import",
+        "run_usl_umbria2_import",
+    } == scheduled_importers
+
+
+def test_catalog_uses_current_official_source_urls() -> None:
+    sources_by_name = {
+        source["name"]: source["base_url"] for source in VERIFIED_SOURCE_CATALOG
+    }
+
+    assert sources_by_name["Policlinico San Martino - Concorsi"] == (
+        "https://www.ospedalesanmartino.it/it/bandi"
+    )
+    assert sources_by_name["AOU Siena - Concorsi"] == (
+        "https://www.ao-siena.toscana.it/avvisi-e-bandi/"
+    )
+    assert sources_by_name["INRCA - Concorsi"] == (
+        "https://www.inrca.it/INRCA/MODTRASP52/"
+        "?Pag=tra_Isti_Concorsi_EspletatiX&mnu=78"
+    )
+    assert sources_by_name["AO Cosenza - Bandi di concorso"] == (
+        "https://aocosenza.it/bandi/concorsi/"
+    )
+    assert sources_by_name["AOU Renato Dulbecco - Bandi di concorso"] == (
+        "https://www.aourenatodulbecco.it/bandi-e-concorsi/"
+    )
+    assert sources_by_name["GOM Reggio Calabria - Bandi di concorso"] == (
+        "https://www.gomrc.it/doc/amministrazione-trasparente/"
+        "bandi-di-concorso.html"
+    )
+    assert sources_by_name["Comune di Milano - Bandi di concorso"] == (
+        "https://www.comune.milano.it/amministrazione/"
+        "amministrazione-trasparente/bandi-di-concorso"
+    )
+    assert sources_by_name["Comune di Rieti - Bandi di concorso"] == (
+        "https://lnx.comune.rieti.it/amministrazione-trasparente/"
+        "content/bandi-di-concorso"
+    )
+    assert sources_by_name["Comune di Viterbo - Bandi di concorso"] == (
+        "https://comune.viterbo.it/argomento/concorsi/"
+    )
+    assert sources_by_name["Comune di Barletta - Amministrazione Trasparente"] == (
+        "https://trasparenza.comune.barletta.bt.it/"
+        "pagina639_bandi-di-concorso.html"
+    )
 
 
 def test_catalog_excludes_robots_blocked_asl_bi_from_automatic_probe() -> None:
@@ -321,7 +451,11 @@ def test_non_automated_health_sources_do_not_enter_refresh_catalog() -> None:
         source["organization"] for source in NON_AUTOMATED_HEALTH_SOURCE_DEFINITIONS
     }
 
-    assert {"ASL BI", "Azienda Zero Calabria"} <= non_automated_organizations
+    assert {
+        "ASL BI",
+        "ASP Vibo Valentia",
+        "Azienda Zero Calabria",
+    } <= non_automated_organizations
     assert automated_organizations.isdisjoint(non_automated_organizations)
 
 
