@@ -86,6 +86,27 @@ Tabelle principali:
 
 Per MVP lo schema viene creato con `Base.metadata.create_all`. Prima di produzione va introdotto Alembic.
 
+### Streamlit Community Cloud e snapshot statico
+
+Il deploy pubblico Streamlit non apre il database applicativo e non esegue import.
+Legge `data/bandi.sqlite` in modalità SQLite `mode=ro&immutable=1`. Lo snapshot è
+generato dal workflow GitHub Actions `Aggiorna archivio bandi`, programmato due
+volte al giorno e avviabile anche manualmente.
+
+La generazione avviene su un database temporaneo. Terminati gli import, viene creato
+un nuovo file con una allowlist rigida di quattro tabelle:
+
+- `sources`;
+- `opportunities`;
+- `attachments`;
+- `snapshot_metadata`.
+
+Sono esportate soltanto opportunità approvate e non dimostrative. Le tabelle di
+alert, email, audit e log di import sono escluse; note redazionali, errori tecnici e
+testo estratto dagli allegati vengono azzerati. Prima della pubblicazione il job
+verifica integrità SQLite, schema, conteggi, campi riservati e URL con credenziali.
+Un digest semantico evita commit e redeploy quando il contenuto pubblico non cambia.
+
 ## Flusso import
 
 1. Importer recupera record grezzi.

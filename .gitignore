@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+.streamlit/secrets.toml
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -8,6 +9,9 @@ __pycache__/
 .mypy_cache/
 *.db
 *.sqlite
+!data/bandi.sqlite
+data/*.sqlite-*
+data/*.tmp
 dist/
 build/
 node_modules/

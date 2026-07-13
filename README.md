@@ -12,7 +12,7 @@ Il progetto segue la specifica funzionale in:
 ## Stack
 
 - Backend: FastAPI, SQLAlchemy, PostgreSQL/SQLite in sviluppo
-- Frontend: React + Vite, pensato per embed iframe
+- Frontend: Streamlit per Community Cloud; React + Vite per embed iframe
 - Import: pipeline Python modulare con classificazione rule-based
 - Search MVP: filtro full-text su database, predisposto per motore dedicato
 - DevOps: Docker Compose con backend, frontend e PostgreSQL
@@ -21,11 +21,55 @@ Il progetto segue la specifica funzionale in:
 
 ```text
 bandi-psicologia/
+  .github/         aggiornamento automatico dell'archivio pubblico
+  .streamlit/      tema e configurazione dell'interfaccia pubblica
   backend/        API, modelli, importers, classificazione, test
+  data/           snapshot SQLite pubblico generato automaticamente
   frontend/       widget React/Vite embeddabile
   docs/           note tecniche e contratto API
   scripts/        comandi PowerShell di supporto
 ```
+
+## Deploy su Streamlit Community Cloud
+
+L'interfaccia Streamlit legge in sola lettura `data/bandi.sqlite`: non richiede
+FastAPI, React, Docker, PostgreSQL, account aggiuntivi o Secrets. GitHub Actions
+interroga le fonti pubbliche due volte al giorno, genera uno snapshot SQLite
+minimizzato e lo salva nel repository soltanto quando i dati cambiano. Il nuovo
+commit provoca automaticamente il redeploy di Streamlit Community Cloud.
+
+Configurazione dell'app in <https://share.streamlit.io>:
+
+```text
+Repository: LPDgit1/Psy-Bandi
+Branch: main
+Main file path: backend/streamlit_app.py
+Python: 3.12
+```
+
+Non inserire valori in `Advanced settings > Secrets`: questa configurazione non ne
+usa. Al primo push delle modifiche il workflow parte automaticamente. Per avviarlo
+a mano: apri il repository su GitHub, scegli `Actions`, poi
+`Aggiorna archivio bandi`, `Run workflow` e conferma su `main`.
+
+Lo snapshot pubblicato contiene solo le tabelle pubbliche di fonti, opportunità e
+allegati. Alert, email, log di import, audit, note redazionali, errori tecnici e testo
+estratto dagli allegati non vengono esportati.
+
+Per provare Streamlit in locale:
+
+```powershell
+cd bandi-psicologia
+python -m venv .venv
+.\.venv\Scripts\pip install -r backend\requirements.txt
+$env:PYTHONPATH = "backend"
+.\.venv\Scripts\python -m app.scripts.build_public_snapshot --output data\bandi.sqlite
+.\.venv\Scripts\python -m streamlit run backend\streamlit_app.py
+```
+
+Il comando di generazione richiede accesso Internet alle sole fonti pubbliche. Per
+provare l'interfaccia con uno snapshot in un percorso diverso si può impostare la
+variabile locale `PUBLIC_SNAPSHOT_PATH`; non è una credenziale.
 
 ## Avvio con Docker
 

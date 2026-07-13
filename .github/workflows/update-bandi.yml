@@ -1,0 +1,61 @@
+name: Aggiorna archivio bandi
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5,17 * * *"
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/update-bandi.yml"
+      - "backend/app/importers/**"
+      - "backend/app/services/**"
+      - "backend/app/scripts/build_public_snapshot.py"
+      - "backend/app/*catalog.py"
+      - "backend/app/source_catalog.py"
+      - "backend/requirements.txt"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-bandi-main
+  cancel-in-progress: false
+
+jobs:
+  update-snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+
+    steps:
+      - name: Scarica il repository
+        uses: actions/checkout@v4
+
+      - name: Configura Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Installa le dipendenze
+        run: python -m pip install --disable-pip-version-check -r backend/requirements.txt
+
+      - name: Aggiorna e valida lo snapshot pubblico
+        env:
+          PYTHONPATH: backend
+          PYTHONUNBUFFERED: "1"
+        run: python -m app.scripts.build_public_snapshot --output data/bandi.sqlite
+
+      - name: Pubblica lo snapshot se è cambiato
+        run: |
+          git add --force data/bandi.sqlite
+          if git diff --cached --quiet; then
+            echo "Nessuna variazione nei dati pubblici."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Aggiorna archivio pubblico bandi"
+          git push
