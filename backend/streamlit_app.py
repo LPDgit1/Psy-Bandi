@@ -189,7 +189,7 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
         format_func=lambda value: _facet_label(
             value,
             facets.statuses,
-            empty_label="Aperte, in scadenza e da verificare",
+            empty_label="Aperte e in scadenza",
         ),
         key="filter_status",
     )
