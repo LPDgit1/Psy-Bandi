@@ -1,0 +1,79 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-bandi}
+      POSTGRES_USER: ${POSTGRES_USER:-bandi}
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}"
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bandi} -d ${POSTGRES_DB:-bandi}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      DATABASE_URL: "${DATABASE_URL:?Set DATABASE_URL in .env}"
+      ADMIN_EMAIL: "${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env}"
+      ADMIN_API_TOKEN: "${ADMIN_API_TOKEN:?Set ADMIN_API_TOKEN in .env}"
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:5173}
+      PUBLIC_API_BASE_URL: ${PUBLIC_API_BASE_URL:-http://localhost:8000/api/public}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      SEED_ON_STARTUP: "false"
+      INPA_IMPORT_ON_STARTUP: ${INPA_IMPORT_ON_STARTUP:-true}
+      INSTITUTIONAL_IMPORT_ON_STARTUP: ${INSTITUTIONAL_IMPORT_ON_STARTUP:-true}
+      INPA_VERIFY_TLS: ${INPA_VERIFY_TLS:-true}
+      SOURCE_IMPORT_VERIFY_TLS: ${SOURCE_IMPORT_VERIFY_TLS:-true}
+      SOURCE_PROBE_VERIFY_TLS: ${SOURCE_PROBE_VERIFY_TLS:-true}
+      REMOVE_DEMO_ON_STARTUP: ${REMOVE_DEMO_ON_STARTUP:-true}
+      INPA_SEARCH_TERMS: ${INPA_SEARCH_TERMS:-psicolog,psicoterap,neuropsicolog,lm-51,albo psicologi,psicodiagnostic,valutazione psicologica,test neuropsicologici,riabilitazione cognitiva,psicopedagog,psicoeduc,psicosocial,salute mentale}
+      INPA_OPEN_SCAN_ENABLED: ${INPA_OPEN_SCAN_ENABLED:-true}
+      INPA_OPEN_SCAN_MAX_PAGES: ${INPA_OPEN_SCAN_MAX_PAGES:-50}
+      INPS_SEARCH_TERMS: ${INPS_SEARCH_TERMS:-psicolog,psicoterap,neuropsicolog,lm-51,albo psicologi,psicodiagnostic,valutazione psicologica,test neuropsicologici,riabilitazione cognitiva,psicopedagog,psicoeduc,psicosocial,salute mentale}
+      INPS_PAGE_SIZE: ${INPS_PAGE_SIZE:-25}
+      INPS_MAX_PAGES: ${INPS_MAX_PAGES:-3}
+      INAIL_MAX_PAGES: ${INAIL_MAX_PAGES:-3}
+      AZIENDA_ZERO_PIEMONTE_MAX_PAGES: ${AZIENDA_ZERO_PIEMONTE_MAX_PAGES:-8}
+      ASUIT_MAX_PAGES: ${ASUIT_MAX_PAGES:-8}
+      AUSL_ROMAGNA_MAX_PAGES: ${AUSL_ROMAGNA_MAX_PAGES:-4}
+      CATALOG_MAX_DETAIL_LINKS_PER_SOURCE: ${CATALOG_MAX_DETAIL_LINKS_PER_SOURCE:-4}
+      DEEP_ADAPTER_MAX_LINKS_PER_SOURCE: ${DEEP_ADAPTER_MAX_LINKS_PER_SOURCE:-24}
+      DEEP_ADAPTER_BUDGET_SECONDS: ${DEEP_ADAPTER_BUDGET_SECONDS:-300}
+      PUBLIC_REFRESH_COOLDOWN_SECONDS: ${PUBLIC_REFRESH_COOLDOWN_SECONDS:-300}
+      ALERT_SCHEDULER_ENABLED: ${ALERT_SCHEDULER_ENABLED:-true}
+      ALERT_SCHEDULER_INITIAL_DELAY_SECONDS: ${ALERT_SCHEDULER_INITIAL_DELAY_SECONDS:-60}
+      ALERT_SCHEDULER_INTERVAL_SECONDS: ${ALERT_SCHEDULER_INTERVAL_SECONDS:-3600}
+      EMAIL_DELIVERY_MODE: ${EMAIL_DELIVERY_MODE:-file}
+      EMAIL_FROM: ${EMAIL_FROM:-Bandi Psicologia <noreply@example.test>}
+      EMAIL_OUTBOX_DIR: ${EMAIL_OUTBOX_DIR:-tmp/email_outbox}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
