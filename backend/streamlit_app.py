@@ -20,12 +20,18 @@ st.set_page_config(
 
 BACKEND_DIR = Path(__file__).resolve().parent
 REPOSITORY_ROOT = BACKEND_DIR.parent
+CACHE_DEPENDENCY_PATHS = (
+    Path(__file__).resolve(),
+    BACKEND_DIR / "app" / "api" / "public.py",
+    BACKEND_DIR / "app" / "services" / "static_catalog.py",
+)
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from app.services.public_snapshot import SnapshotValidationError  # noqa: E402
 from app.services.static_catalog import StaticCatalog  # noqa: E402
 from app.streamlit_support import (  # noqa: E402
+    cache_revision,
     format_compensation,
     format_date,
     format_datetime,
@@ -70,19 +76,20 @@ def snapshot_path() -> Path:
     return path if path.is_absolute() else REPOSITORY_ROOT / path
 
 
-@st.cache_resource(show_spinner=False)
-def load_catalog(path: str) -> StaticCatalog:
+@st.cache_resource(show_spinner=False, max_entries=2)
+def load_catalog(path: str, revision: str) -> StaticCatalog:
     return StaticCatalog(Path(path))
 
 
 @st.cache_data(show_spinner=False)
-def load_facets(path: str) -> Any:
-    return load_catalog(path).facets()
+def load_facets(path: str, revision: str) -> Any:
+    return load_catalog(path, revision).facets()
 
 
 @st.cache_data(show_spinner=False)
 def search_opportunities(
     path: str,
+    revision: str,
     q: str | None,
     region: str | None,
     province: str | None,
@@ -96,7 +103,7 @@ def search_opportunities(
     limit: int,
     offset: int,
 ) -> Any:
-    return load_catalog(path).search(
+    return load_catalog(path, revision).search(
         q=q,
         region=region,
         province=province,
@@ -113,8 +120,8 @@ def search_opportunities(
 
 
 @st.cache_data(show_spinner=False)
-def load_opportunity(path: str, opportunity_id: str) -> Any:
-    return load_catalog(path).detail(opportunity_id)
+def load_opportunity(path: str, revision: str, opportunity_id: str) -> Any:
+    return load_catalog(path, revision).detail(opportunity_id)
 
 
 def _clear_data_cache() -> None:
@@ -245,9 +252,9 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
     }
 
 
-def _render_detail(path: str, opportunity_id: str) -> None:
+def _render_detail(path: str, revision: str, opportunity_id: str) -> None:
     try:
-        detail = load_opportunity(path, opportunity_id)
+        detail = load_opportunity(path, revision, opportunity_id)
     except Exception:
         logger.exception("Unable to load opportunity detail")
         st.error("Il dettaglio non è disponibile in questo momento.")
@@ -362,8 +369,9 @@ def main() -> None:
 
     path = str(snapshot_path().resolve())
     try:
-        catalog = load_catalog(path)
-        facets = load_facets(path)
+        revision = cache_revision(Path(path), CACHE_DEPENDENCY_PATHS)
+        catalog = load_catalog(path, revision)
+        facets = load_facets(path, revision)
     except SnapshotValidationError as exc:
         logger.warning("Public snapshot unavailable: %s", exc)
         st.error(
@@ -394,6 +402,7 @@ def main() -> None:
     try:
         response = search_opportunities(
             path,
+            revision,
             **filters,
             offset=page * filters["limit"],
         )
@@ -404,7 +413,7 @@ def main() -> None:
 
     selected_id = st.session_state.get("selected_opportunity")
     if selected_id:
-        _render_detail(path, selected_id)
+        _render_detail(path, revision, selected_id)
 
     result_label = "risultato" if response.total == 1 else "risultati"
     st.subheader(f"{response.total} {result_label}")

@@ -50,6 +50,25 @@ def test_parse_ats_liguria_record_filters_and_extracts_attachment() -> None:
     assert len(record.attachments) == 1
 
 
+def test_parse_ats_liguria_record_extracts_textual_closing_date() -> None:
+    html = """
+    <main>
+      <h1>Concorso pubblico per dirigente psicologo</h1>
+      <p>Data pubblicazione: 13 Marzo 2024</p>
+      <p>Data chiusura: 11 Aprile 2024</p>
+    </main>
+    """
+
+    record = parse_ats_liguria_record(
+        html,
+        "https://www.asl3.liguria.it/bandi/concorsi-aperti/publiccompetition/psicologo.html",
+    )
+
+    assert record is not None
+    assert record.deadline is not None
+    assert record.deadline.date().isoformat() == "2024-04-11"
+
+
 def test_parse_ats_liguria_record_ignores_non_psychology_detail() -> None:
     html = "<main><h1>Avviso pubblico per dirigente medico</h1></main>"
 

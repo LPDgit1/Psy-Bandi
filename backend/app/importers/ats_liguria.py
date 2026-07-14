@@ -85,10 +85,14 @@ def _verified_active_detail(official_url: str) -> bool:
 
 
 def _deadline_from_text(text: str) -> datetime | None:
+    date_value = (
+        r"([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4}|"
+        r"[0-9]{1,2}\s+[a-z]{3,12}\s+[0-9]{4})"
+    )
     patterns = (
-        r"scadenza(?:\s+domande)?[:\s]+([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})",
-        r"entro\s+il\s+([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})",
-        r"termine.*?([0-9]{1,2}[/-][0-9]{1,2}[/-][0-9]{2,4})",
+        rf"(?:data\s+)?(?:scadenza|chiusura)(?:\s+domande)?[:\s]+{date_value}",
+        rf"entro\s+il\s+{date_value}",
+        rf"termine.*?{date_value}",
     )
     for pattern in patterns:
         match = re.search(pattern, text, flags=re.IGNORECASE)

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import hashlib
 from datetime import datetime
+from pathlib import Path
 from urllib.parse import urlparse
 
 LABELS: dict[str, str] = {
@@ -62,6 +64,19 @@ LABELS: dict[str, str] = {
     "bassa": "Bassa",
     "esclusa": "Esclusa",
 }
+
+
+def cache_revision(snapshot: Path, dependency_paths: tuple[Path, ...]) -> str:
+    """Return a cache key that follows snapshot and search-code updates."""
+    digest = hashlib.sha256()
+    if snapshot.is_file():
+        stat = snapshot.stat()
+        digest.update(f"{stat.st_mtime_ns}:{stat.st_size}".encode())
+    else:
+        digest.update(b"snapshot-missing")
+    for dependency in dependency_paths:
+        digest.update(dependency.read_bytes())
+    return digest.hexdigest()
 
 
 def label_for(value: str | None) -> str:
