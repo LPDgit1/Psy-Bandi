@@ -40,47 +40,48 @@ st.markdown(
     <style>
       [data-testid="stAppViewContainer"] {
         background:
-          radial-gradient(circle at 86% 3%, rgba(46, 125, 96, .09), transparent 26rem),
-          linear-gradient(180deg, #fbfdfc 0%, #f6f9f7 100%);
+          radial-gradient(circle at 86% 3%, rgba(41, 111, 85, .13), transparent 26rem),
+          linear-gradient(180deg, #f4f8f6 0%, #eaf1ed 100%);
       }
-      [data-testid="stHeader"] {background: rgba(251, 253, 252, .86);}
+      [data-testid="stHeader"] {background: rgba(244, 248, 246, .9);}
       [data-testid="stSidebar"] {
-        background: #f4f8f5;
-        border-right: 1px solid #dfe9e3;
+        background: #e5eee9;
+        border-right: 1px solid #c3d5cb;
       }
       .block-container {max-width: 1180px; padding-top: 1.6rem; padding-bottom: 3rem;}
       [data-testid="stMetricValue"] {font-size: 1.15rem;}
       [data-testid="stVerticalBlockBorderWrapper"] {
-        background: rgba(255, 255, 255, .96);
-        border-color: #dce7e1 !important;
+        background: #ffffff;
+        border-color: #cbdad2 !important;
         border-radius: 16px !important;
-        box-shadow: 0 7px 24px rgba(31, 64, 51, .055);
+        box-shadow: 0 8px 24px rgba(24, 58, 45, .09);
       }
       .hero-panel {
         min-height: 11rem;
         padding: 1.7rem 1.9rem;
-        border: 1px solid #d5e5dc;
+        border: 1px solid #1d5845;
         border-radius: 20px;
-        background: linear-gradient(135deg, #ffffff 0%, #edf7f1 100%);
-        box-shadow: 0 10px 30px rgba(31, 64, 51, .07);
+        background: linear-gradient(135deg, #123d31 0%, #246a52 100%);
+        box-shadow: 0 12px 30px rgba(18, 61, 49, .18);
       }
       .hero-eyebrow, .toggle-eyebrow, .result-summary-label {
-        color: #267455;
+        color: #1d6b4d;
         font-size: .72rem;
         font-weight: 750;
         letter-spacing: .09em;
         text-transform: uppercase;
       }
+      .hero-eyebrow {color: #9fe0c1;}
       .hero-title {
-        color: #153c2e;
+        color: #ffffff;
         font-size: clamp(2rem, 4vw, 3rem);
         font-weight: 780;
         letter-spacing: -.035em;
         line-height: 1.05;
         margin: .35rem 0 .7rem;
       }
-      .hero-copy {color: #50675d; font-size: 1.02rem; line-height: 1.55; max-width: 44rem;}
-      .source-note {color: #66776f; font-size: .84rem; margin-top: .8rem;}
+      .hero-copy {color: #e2eee8; font-size: 1.02rem; line-height: 1.55; max-width: 44rem;}
+      .source-note {color: #bcd7cb; font-size: .84rem; margin-top: .8rem;}
       .summary-strip {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -89,10 +90,14 @@ st.markdown(
       }
       .summary-item {
         padding: .9rem 1rem;
-        border: 1px solid #e0e9e4;
+        border: 1px solid #cfded6;
         border-radius: 13px;
-        background: rgba(255, 255, 255, .82);
+        background: #ffffff;
+        box-shadow: 0 4px 14px rgba(24, 58, 45, .055);
       }
+      .summary-item:nth-child(1) {border-top: 3px solid #287a57;}
+      .summary-item:nth-child(2) {border-top: 3px solid #c18428;}
+      .summary-item:nth-child(3) {border-top: 3px solid #4f718d;}
       .summary-label {
         color: #6a7972;
         font-size: .74rem;
@@ -105,6 +110,8 @@ st.markdown(
         align-items: flex-start;
         justify-content: space-between;
         gap: 1rem;
+        border-left: 4px solid #2c7b59;
+        padding-left: .85rem;
       }
       .result-kicker {color: #61736a; font-size: .82rem; font-weight: 600; margin-bottom: .28rem;}
       .result-title {color: #183f30; font-size: 1.16rem; font-weight: 750; line-height: 1.35;}
@@ -118,10 +125,10 @@ st.markdown(
         font-weight: 700;
         white-space: nowrap;
       }
-      .status-open {color: #14633f; background: #dff3e8;}
-      .status-closing {color: #8a5811; background: #fff0cf;}
-      .status-review {color: #78551a; background: #fff4d8; border: 1px solid #f1dca8;}
-      .status-closed {color: #6f4545; background: #f5e7e7;}
+      .status-open {color: #0d5936; background: #ccebd9; border: 1px solid #a8d8bc;}
+      .status-closing {color: #744400; background: #ffe4ad; border: 1px solid #eac879;}
+      .status-review {color: #694600; background: #fff0c7; border: 1px solid #e7c66f;}
+      .status-closed {color: #713737; background: #f3d8d8; border: 1px solid #ddb7b7;}
       .status-neutral {color: #53635c; background: #edf1ef;}
       .result-meta-grid {
         display: grid;
@@ -132,7 +139,8 @@ st.markdown(
       .result-meta {
         padding: .68rem .78rem;
         border-radius: 11px;
-        background: #f4f8f5;
+        background: #edf3f0;
+        border: 1px solid #d8e4de;
       }
       .result-meta span {
         display: block;
@@ -145,8 +153,8 @@ st.markdown(
       .result-summary {color: #455c52; line-height: 1.52; margin: .2rem 0 .75rem;}
       .area-chip {
         display: inline-block;
-        color: #356650;
-        background: #eaf4ee;
+        color: #365178;
+        background: #e5ecf6;
         border-radius: 999px;
         font-size: .75rem;
         margin: 0 .32rem .55rem 0;
