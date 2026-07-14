@@ -95,6 +95,57 @@ def test_default_public_filter_hides_review_items_without_deadline() -> None:
     assert missing_deadline_results == [review_item]
 
 
+def test_include_review_adds_review_without_exposing_closed_items() -> None:
+    open_item = _opportunity(
+        title="Avviso aperto",
+        region="Lazio",
+        province="RM",
+        status="open",
+    )
+    review_item = _opportunity(
+        title="Avviso da verificare",
+        region="Lazio",
+        province="RM",
+        status="review",
+    )
+    closed_item = _opportunity(
+        title="Avviso chiuso",
+        region="Lazio",
+        province="RM",
+        status="closed",
+    )
+
+    results = _filter_items(
+        [open_item, review_item, closed_item],
+        q=None,
+        region=None,
+        province=None,
+        category=None,
+        entity_type=None,
+        area=None,
+        status_filter=None,
+        deadline=None,
+        featured=None,
+        include_review=True,
+    )
+    exact_status_results = _filter_items(
+        [open_item, review_item, closed_item],
+        q=None,
+        region=None,
+        province=None,
+        category=None,
+        entity_type=None,
+        area=None,
+        status_filter="review",
+        deadline=None,
+        featured=None,
+        include_review=False,
+    )
+
+    assert results == [open_item, review_item]
+    assert exact_status_results == [review_item]
+
+
 def test_region_filter_limits_province_facet_options() -> None:
     items = [
         _opportunity(title="Avviso psicologo Lazio", region="Lazio", province="RM"),

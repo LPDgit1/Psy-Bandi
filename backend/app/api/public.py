@@ -314,15 +314,11 @@ def _build_contextual_facets(
             region,
         ),
         provinces=_with_selected_facet(
-            _counter_to_facets(
-                Counter(item.province for item in province_items if item.province)
-            ),
+            _counter_to_facets(Counter(item.province for item in province_items if item.province)),
             selected_province,
         ),
         categories=_with_selected_facet(
-            _counter_to_facets(
-                Counter(item.category for item in category_items if item.category)
-            ),
+            _counter_to_facets(Counter(item.category for item in category_items if item.category)),
             category,
         ),
         entity_types=_with_selected_facet(
@@ -360,6 +356,7 @@ def list_opportunities(
     status_filter: str | None = Query(None, alias="status"),
     deadline: str | None = None,
     featured: bool | None = None,
+    include_review: bool = False,
     sort: str = "deadline",
     limit: int = Query(20, ge=1, le=100),
     offset: int = Query(0, ge=0),
@@ -379,6 +376,7 @@ def list_opportunities(
         status_filter=status_filter,
         deadline=deadline,
         featured=featured,
+        include_review=include_review,
     )
     sorted_items = _sort_items(filtered, sort)
     paginated = sorted_items[offset : offset + limit]
@@ -400,6 +398,7 @@ def list_opportunities(
             status_filter=status_filter,
             deadline=deadline,
             featured=featured,
+            include_review=include_review,
         ),
     )
 
@@ -540,7 +539,6 @@ def create_report(payload: ReportCreate) -> dict[str, str]:
     return {
         "status": "received",
         "message": (
-            "Segnalazione acquisita. Nel prossimo step verra collegata "
-            "a una coda redazionale."
+            "Segnalazione acquisita. Nel prossimo step verra collegata a una coda redazionale."
         ),
     }

@@ -46,9 +46,7 @@ class StaticCatalog:
         self.engine.dispose()
 
     def _items(self, *, relationships: bool = False) -> list[Opportunity]:
-        statement: Any = select(Opportunity).where(
-            Opportunity.editorial_status == "approved"
-        )
+        statement: Any = select(Opportunity).where(Opportunity.editorial_status == "approved")
         if relationships:
             statement = statement.options(
                 selectinload(Opportunity.source),
@@ -72,6 +70,7 @@ class StaticCatalog:
         status_filter: str | None = None,
         deadline: str | None = None,
         featured: bool | None = None,
+        include_review: bool = False,
         sort: str = "deadline",
         limit: int = 20,
         offset: int = 0,
@@ -88,6 +87,7 @@ class StaticCatalog:
             status_filter=status_filter,
             deadline=deadline,
             featured=featured,
+            include_review=include_review,
         )
         sorted_items = sort_items(filtered, sort)
         return OpportunityListResponse(
@@ -107,6 +107,7 @@ class StaticCatalog:
                 status_filter=status_filter,
                 deadline=deadline,
                 featured=featured,
+                include_review=include_review,
             ),
         )
 

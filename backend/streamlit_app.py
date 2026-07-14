@@ -38,10 +38,127 @@ logger = logging.getLogger(__name__)
 st.markdown(
     """
     <style>
-      .block-container {max-width: 1180px; padding-top: 2rem;}
+      [data-testid="stAppViewContainer"] {
+        background:
+          radial-gradient(circle at 86% 3%, rgba(46, 125, 96, .09), transparent 26rem),
+          linear-gradient(180deg, #fbfdfc 0%, #f6f9f7 100%);
+      }
+      [data-testid="stHeader"] {background: rgba(251, 253, 252, .86);}
+      [data-testid="stSidebar"] {
+        background: #f4f8f5;
+        border-right: 1px solid #dfe9e3;
+      }
+      .block-container {max-width: 1180px; padding-top: 1.6rem; padding-bottom: 3rem;}
       [data-testid="stMetricValue"] {font-size: 1.15rem;}
-      .source-note {color: #5f6b66; font-size: .88rem;}
-      .result-title {font-size: 1.15rem; font-weight: 700; line-height: 1.35;}
+      [data-testid="stVerticalBlockBorderWrapper"] {
+        background: rgba(255, 255, 255, .96);
+        border-color: #dce7e1 !important;
+        border-radius: 16px !important;
+        box-shadow: 0 7px 24px rgba(31, 64, 51, .055);
+      }
+      .hero-panel {
+        min-height: 11rem;
+        padding: 1.7rem 1.9rem;
+        border: 1px solid #d5e5dc;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #ffffff 0%, #edf7f1 100%);
+        box-shadow: 0 10px 30px rgba(31, 64, 51, .07);
+      }
+      .hero-eyebrow, .toggle-eyebrow, .result-summary-label {
+        color: #267455;
+        font-size: .72rem;
+        font-weight: 750;
+        letter-spacing: .09em;
+        text-transform: uppercase;
+      }
+      .hero-title {
+        color: #153c2e;
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 780;
+        letter-spacing: -.035em;
+        line-height: 1.05;
+        margin: .35rem 0 .7rem;
+      }
+      .hero-copy {color: #50675d; font-size: 1.02rem; line-height: 1.55; max-width: 44rem;}
+      .source-note {color: #66776f; font-size: .84rem; margin-top: .8rem;}
+      .summary-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .8rem;
+        margin: 1.25rem 0 1.45rem;
+      }
+      .summary-item {
+        padding: .9rem 1rem;
+        border: 1px solid #e0e9e4;
+        border-radius: 13px;
+        background: rgba(255, 255, 255, .82);
+      }
+      .summary-label {
+        color: #6a7972;
+        font-size: .74rem;
+        font-weight: 650;
+        text-transform: uppercase;
+      }
+      .summary-value {color: #183f30; font-size: 1.05rem; font-weight: 750; margin-top: .16rem;}
+      .result-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+      .result-kicker {color: #61736a; font-size: .82rem; font-weight: 600; margin-bottom: .28rem;}
+      .result-title {color: #183f30; font-size: 1.16rem; font-weight: 750; line-height: 1.35;}
+      .status-badge {
+        display: inline-flex;
+        flex: 0 0 auto;
+        align-items: center;
+        padding: .32rem .62rem;
+        border-radius: 999px;
+        font-size: .75rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .status-open {color: #14633f; background: #dff3e8;}
+      .status-closing {color: #8a5811; background: #fff0cf;}
+      .status-review {color: #78551a; background: #fff4d8; border: 1px solid #f1dca8;}
+      .status-closed {color: #6f4545; background: #f5e7e7;}
+      .status-neutral {color: #53635c; background: #edf1ef;}
+      .result-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .65rem;
+        margin: 1rem 0;
+      }
+      .result-meta {
+        padding: .68rem .78rem;
+        border-radius: 11px;
+        background: #f4f8f5;
+      }
+      .result-meta span {
+        display: block;
+        color: #6d7b75;
+        font-size: .7rem;
+        text-transform: uppercase;
+      }
+      .result-meta strong {display: block; color: #294a3d; font-size: .9rem; margin-top: .14rem;}
+      .result-summary-label {margin-top: .1rem;}
+      .result-summary {color: #455c52; line-height: 1.52; margin: .2rem 0 .75rem;}
+      .area-chip {
+        display: inline-block;
+        color: #356650;
+        background: #eaf4ee;
+        border-radius: 999px;
+        font-size: .75rem;
+        margin: 0 .32rem .55rem 0;
+        padding: .24rem .55rem;
+      }
+      .stButton > button, .stLinkButton > a {border-radius: 10px;}
+      @media (max-width: 700px) {
+        .hero-panel {min-height: auto; padding: 1.35rem;}
+        .summary-strip, .result-meta-grid {grid-template-columns: 1fr;}
+        .result-heading {display: block;}
+        .status-badge {margin-top: .65rem;}
+      }
     </style>
     """,
     unsafe_allow_html=True,
@@ -59,6 +176,7 @@ FILTER_WIDGET_KEYS = (
     "filter_featured",
     "filter_sort",
     "page_size",
+    "include_review",
 )
 FILTER_DEFAULTS: dict[str, Any] = {
     "search_query": "",
@@ -72,6 +190,7 @@ FILTER_DEFAULTS: dict[str, Any] = {
     "filter_featured": False,
     "filter_sort": "deadline",
     "page_size": 20,
+    "include_review": False,
 }
 
 
@@ -115,6 +234,12 @@ def _reset_province() -> None:
     st.session_state.pop("selected_opportunity", None)
 
 
+def _reset_status_for_review_toggle() -> None:
+    st.session_state.filter_status = ""
+    st.session_state.page = 0
+    st.session_state.pop("selected_opportunity", None)
+
+
 def _context_filter_state() -> dict[str, Any]:
     return {
         "q": str(st.session_state.get("search_query", "")).strip() or None,
@@ -126,11 +251,53 @@ def _context_filter_state() -> dict[str, Any]:
         "status_filter": st.session_state.get("filter_status") or None,
         "deadline": st.session_state.get("filter_deadline") or None,
         "featured": True if st.session_state.get("filter_featured") else None,
+        "include_review": bool(st.session_state.get("include_review")),
     }
+
+
+def _facet_count(facets: Any, value: str) -> int:
+    return next((facet.count for facet in facets.statuses if facet.value == value), 0)
+
+
+def _render_page_header(facets: Any, generated_at: datetime, source_count: int) -> None:
+    introduction, visibility = st.columns([3.3, 1.25], gap="large")
+    with introduction:
+        st.markdown(
+            f"""
+            <div class="hero-panel">
+              <div class="hero-eyebrow">Opportunità professionali per la psicologia</div>
+              <div class="hero-title">Bandi Psicologia</div>
+              <div class="hero-copy">
+                Bandi, concorsi, avvisi e incarichi raccolti da fonti pubbliche,
+                in una vista semplice da consultare e filtrare.
+              </div>
+              <div class="source-note">
+                Dati aggiornati al {html.escape(format_datetime(generated_at))} ·
+                {source_count} fonti con risultati pubblicati
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with visibility:
+        with st.container(border=True):
+            st.markdown('<div class="toggle-eyebrow">Visualizzazione</div>', unsafe_allow_html=True)
+            review_count = _facet_count(facets, "review")
+            st.toggle(
+                f"Mostra anche “Da verificare” ({review_count})",
+                key="include_review",
+                help=(
+                    "Aggiunge ai bandi aperti quelli per cui stato o scadenza "
+                    "richiedono un controllo sulla fonte ufficiale."
+                ),
+                on_change=_reset_status_for_review_toggle,
+            )
+            st.caption("La vista iniziale mostra soltanto aperti e in scadenza.")
 
 
 def _render_sidebar(facets: Any) -> dict[str, Any]:
     st.sidebar.header("Ricerca e filtri")
+    st.sidebar.caption("Affina i risultati per territorio, ambito e scadenza.")
     query = st.sidebar.text_input(
         "Parole chiave",
         placeholder="es. psicoterapia, neuropsicologia…",
@@ -176,7 +343,11 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
         format_func=lambda value: _facet_label(
             value,
             facets.statuses,
-            empty_label="Aperte e in scadenza",
+            empty_label=(
+                "Aperte, in scadenza e da verificare"
+                if st.session_state.include_review
+                else "Aperte e in scadenza"
+            ),
         ),
         key="filter_status",
     )
@@ -226,6 +397,7 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
         "status_filter": status_filter or None,
         "deadline": deadline or None,
         "featured": True if featured else None,
+        "include_review": bool(st.session_state.include_review),
         "sort": sort,
         "limit": page_size,
     }
@@ -310,19 +482,62 @@ def _render_detail(detail: Any | None) -> None:
 def _render_result(item: Any) -> None:
     with st.container(border=True):
         safe_title = html.escape(item.title)
-        st.markdown(f"<div class='result-title'>{safe_title}</div>", unsafe_allow_html=True)
-        st.caption(
-            f"{item.organization} · {item.region or 'Regione non indicata'} · "
-            f"{label_for(item.status)}"
+        safe_organization = html.escape(item.organization)
+        location = (
+            " · ".join(value for value in (item.region, item.province) if value)
+            or "Territorio non indicato"
         )
-        cols = st.columns([2, 2, 2, 3])
-        cols[0].metric("Scadenza", format_date(item.deadline))
-        cols[1].metric("Tipologia", label_for(item.category))
-        cols[2].metric("Pertinenza", label_for(item.psychology_relevance))
-        cols[3].write(item.summary or "Riepilogo non disponibile.")
+        status_class = {
+            "open": "status-open",
+            "closing_soon": "status-closing",
+            "review": "status-review",
+            "closed": "status-closed",
+        }.get(item.status, "status-neutral")
+        st.markdown(
+            f"""
+            <div class="result-heading">
+              <div>
+                <div class="result-kicker">{safe_organization} · {html.escape(location)}</div>
+                <div class="result-title">{safe_title}</div>
+              </div>
+              <span class="status-badge {status_class}">{html.escape(label_for(item.status))}</span>
+            </div>
+            <div class="result-meta-grid">
+              <div class="result-meta">
+                <span>Scadenza</span>
+                <strong>{html.escape(format_date(item.deadline))}</strong>
+              </div>
+              <div class="result-meta">
+                <span>Tipologia</span>
+                <strong>{html.escape(label_for(item.category))}</strong>
+              </div>
+              <div class="result-meta">
+                <span>Pertinenza</span>
+                <strong>{html.escape(label_for(item.psychology_relevance))}</strong>
+              </div>
+            </div>
+            <div class="result-summary-label">In breve</div>
+            <div class="result-summary">
+              {html.escape(item.summary or "Riepilogo non disponibile.")}
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-        actions = st.columns([1, 1, 3])
-        if actions[0].button("Dettagli", key=f"detail_{item.id}", use_container_width=True):
+        if item.areas:
+            chips = "".join(
+                f'<span class="area-chip">{html.escape(label_for(area))}</span>'
+                for area in item.areas[:4]
+            )
+            st.markdown(chips, unsafe_allow_html=True)
+
+        actions = st.columns([1.2, 1.6, 4])
+        if actions[0].button(
+            "Vedi dettagli",
+            key=f"detail_{item.id}",
+            type="primary",
+            use_container_width=True,
+        ):
             st.session_state.selected_opportunity = item.id
             st.rerun()
         official_url = safe_http_url(item.official_url)
@@ -336,8 +551,6 @@ def _render_result(item: Any) -> None:
 
 def main() -> None:
     _initialize_filter_state()
-    st.title("Bandi Psicologia")
-    st.caption("Bandi, concorsi, avvisi e incarichi rilevanti per psicologhe e psicologi.")
 
     path = str(snapshot_path().resolve())
     catalog: StaticCatalog | None = None
@@ -352,6 +565,7 @@ def main() -> None:
         if catalog is not None:
             catalog.close()
         logger.warning("Public snapshot unavailable: %s", exc)
+        st.title("Bandi Psicologia")
         st.error(
             "L'archivio pubblico non è ancora disponibile. Nel repository apri "
             "Actions → Aggiorna archivio bandi → Run workflow, quindi attendi il redeploy."
@@ -361,16 +575,14 @@ def main() -> None:
         if catalog is not None:
             catalog.close()
         logger.exception("Unable to open the public snapshot")
+        st.title("Bandi Psicologia")
         st.error("L'archivio pubblico non è leggibile in questo momento.")
         st.stop()
 
     assert catalog is not None
 
     generated_at = datetime.fromisoformat(catalog.snapshot.generated_at)
-    st.caption(
-        f"Dati aggiornati al {format_datetime(generated_at)} · "
-        f"{catalog.snapshot.source_count} fonti con risultati pubblicati"
-    )
+    _render_page_header(facets, generated_at, catalog.snapshot.source_count)
 
     filters = _render_sidebar(facets)
 
@@ -399,7 +611,32 @@ def main() -> None:
         _render_detail(detail)
 
     result_label = "risultato" if response.total == 1 else "risultati"
-    st.subheader(f"{response.total} {result_label}")
+    if filters["status_filter"]:
+        view_label = f"Stato: {label_for(filters['status_filter'])}"
+    elif filters["include_review"]:
+        view_label = "Aperti + da verificare"
+    else:
+        view_label = "Solo aperti e in scadenza"
+    st.markdown(
+        f"""
+        <div class="summary-strip">
+          <div class="summary-item">
+            <div class="summary-label">Risultati</div>
+            <div class="summary-value">{response.total} {result_label}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Fonti pubblicate</div>
+            <div class="summary-value">{catalog.snapshot.source_count}</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Vista attiva</div>
+            <div class="summary-value">{html.escape(view_label)}</div>
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.subheader("Bandi trovati")
     if response.total == 0:
         st.info(
             "Nessun bando corrisponde ai filtri selezionati. Prova a rimuovere uno o "

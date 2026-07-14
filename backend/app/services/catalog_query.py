@@ -113,8 +113,10 @@ def filter_items(
     status_filter: str | None,
     deadline: str | None,
     featured: bool | None,
+    include_review: bool = False,
     apply_default_status: bool = True,
 ) -> list[Opportunity]:
+    default_statuses = DEFAULT_PUBLIC_STATUSES | ({"review"} if include_review else set())
     filtered: list[Opportunity] = []
     for item in items:
         if item.editorial_status != "approved":
@@ -123,7 +125,7 @@ def filter_items(
             apply_default_status
             and not status_filter
             and deadline not in {"missing", "past"}
-            and item.status not in DEFAULT_PUBLIC_STATUSES
+            and item.status not in default_statuses
         ):
             continue
         if not _matches_query(item, q):
@@ -220,6 +222,7 @@ def build_contextual_facets(
     status_filter: str | None,
     deadline: str | None,
     featured: bool | None,
+    include_review: bool = False,
 ) -> Facets:
     region_items = filter_items(
         items,
@@ -232,6 +235,7 @@ def build_contextual_facets(
         status_filter=status_filter,
         deadline=deadline,
         featured=featured,
+        include_review=include_review,
     )
     province_items = filter_items(
         items,
@@ -244,6 +248,7 @@ def build_contextual_facets(
         status_filter=status_filter,
         deadline=deadline,
         featured=featured,
+        include_review=include_review,
     )
     category_items = filter_items(
         items,
@@ -256,6 +261,7 @@ def build_contextual_facets(
         status_filter=status_filter,
         deadline=deadline,
         featured=featured,
+        include_review=include_review,
     )
     entity_type_items = filter_items(
         items,
@@ -268,6 +274,7 @@ def build_contextual_facets(
         status_filter=status_filter,
         deadline=deadline,
         featured=featured,
+        include_review=include_review,
     )
     area_items = filter_items(
         items,
@@ -280,6 +287,7 @@ def build_contextual_facets(
         status_filter=status_filter,
         deadline=deadline,
         featured=featured,
+        include_review=include_review,
     )
     status_items = filter_items(
         items,
@@ -292,6 +300,7 @@ def build_contextual_facets(
         status_filter=None,
         deadline=deadline,
         featured=featured,
+        include_review=include_review,
         apply_default_status=False,
     )
 
