@@ -14,39 +14,68 @@ class Classification:
     relevance_score: int
 
 
-PSYCHOLOGY_TERMS: dict[str, int] = {
-    "psicolog": 35,
-    "psicoterap": 35,
-    "neuropsicolog": 35,
-    "iscrizione albo psicolog": 35,
-    "albo professionale degli psicolog": 35,
-    "laurea in psicologia": 30,
-    "lm 51": 30,
-    "classe 58 s": 30,
-    "abilitazione alla professione di psicolog": 30,
-    "psicologia clinica": 25,
-    "psicologia scolastica": 25,
-    "psicologia del lavoro": 25,
-    "psicologia di base": 25,
-    "psicologo di base": 30,
-    "psicologo cure primarie": 30,
-    "psicologia delle cure primarie": 25,
-    "psicologia della salute": 20,
-    "psicologia di comunita": 20,
-    "psicologia ospedaliera": 20,
-    "psicodiagnostic": 25,
-    "valutazione psicologica": 20,
-    "valutazione neuropsicologica": 25,
-    "test neuropsicologici": 25,
-    "riabilitazione cognitiva": 25,
-    "psicopedagog": 20,
-    "psicoeduc": 20,
-    "psicosocial": 15,
-    "salute mentale": 15,
-    "servizio psicologico": 25,
-    "supporto psicologico": 25,
-    "counseling psicologico": 20,
-}
+PROFESSIONAL_ROLE_PATTERN = re.compile(
+    r"\bpsicolog(?:o|a|i|he|e)\b|"
+    r"\bpsicoterapeut(?:a|e|i)\b|"
+    r"\bneuropsicolog(?:o|a|i|he|e)\b"
+)
+
+# Ogni gruppo rappresenta un solo tipo di evidenza: conta il termine piu forte
+# del gruppo, evitando che stringhe sovrapposte come "neuropsicologo" vengano
+# sommate anche come "psicologo".
+PSYCHOLOGY_TERM_GROUPS: tuple[dict[str, int], ...] = (
+    {
+        "psicolog": 35,
+        "psicoterap": 40,
+        "neuropsicolog": 45,
+    },
+    {
+        "iscrizione albo psicolog": 35,
+        "albo professionale degli psicolog": 35,
+        "laurea in psicologia": 30,
+        "scienze e tecniche psicologiche": 30,
+        "dottore in tecniche psicologiche": 30,
+        "dottoressa in tecniche psicologiche": 30,
+        "lm 51": 30,
+        "classe 58 s": 30,
+        "l 24": 30,
+        "abilitazione alla professione di psicolog": 30,
+    },
+    {
+        "psicologia clinica": 25,
+        "psicologia scolastica": 25,
+        "psicologia del lavoro": 25,
+        "psicologia delle organizzazioni": 25,
+        "psicologia sociale": 20,
+        "psicologia di base": 25,
+        "psicologo di base": 30,
+        "psicologo cure primarie": 30,
+        "psicologia delle cure primarie": 25,
+        "psicologia della salute": 20,
+        "psicologia di comunita": 20,
+        "psicologia ospedaliera": 20,
+        "psicodiagnostic": 25,
+        "valutazione psicologica": 20,
+        "valutazione neuropsicologica": 25,
+        "test neuropsicologici": 25,
+        "riabilitazione cognitiva": 25,
+    },
+    {
+        "servizio psicologico": 25,
+        "supporto psicologico": 25,
+        "sostegno psicologico": 25,
+        "consulenza psicologica": 25,
+        "benessere psicologico": 20,
+        "sportello di ascolto psicologico": 25,
+        "counseling psicologico": 20,
+    },
+    {
+        "psicopedagog": 10,
+        "psicoeduc": 10,
+        "psicosocial": 10,
+        "salute mentale": 10,
+    },
+)
 
 AREA_RULES: dict[str, tuple[str, ...]] = {
     "psicologia-scolastica": (
@@ -70,7 +99,13 @@ AREA_RULES: dict[str, tuple[str, ...]] = {
         "riabilitazione cognitiva",
         "valutazione neuropsicologica",
     ),
-    "psicologia-del-lavoro": ("benessere organizzativo", "risorse umane", "stress lavoro"),
+    "psicologia-del-lavoro": (
+        "psicologia del lavoro",
+        "psicologia delle organizzazioni",
+        "benessere organizzativo",
+        "risorse umane",
+        "stress lavoro",
+    ),
     "psicologia-penitenziaria": ("istituto penitenziario", "area trattamentale", "uepe"),
     "psicologia-giuridica": ("tribunale", "ctu", "penale", "giudiziaria", "messa alla prova"),
     "psicologia-emergenza": ("emergenza", "protezione civile", "trauma"),
@@ -118,6 +153,12 @@ REQUIREMENT_RULES: dict[str, tuple[str, ...]] = {
         "58/s",
         "classe 58 s",
         "classe lm 51",
+        "l-24",
+        "l 24",
+        "classe l 24",
+        "scienze e tecniche psicologiche",
+        "dottore in tecniche psicologiche",
+        "dottoressa in tecniche psicologiche",
         "vecchio ordinamento psicologia",
     ),
     "abilitazione": (
@@ -134,6 +175,7 @@ REQUIREMENT_RULES: dict[str, tuple[str, ...]] = {
         "albo psicologi",
     ),
     "albo-sezione-a": ("sezione a", "albo a"),
+    "albo-sezione-b": ("sezione b", "albo b"),
     "psicoterapia": ("psicoterap", "specializzazione quadriennale"),
     "esperienza-minima": ("esperienza almeno", "esperienza minima", "comprovata esperienza"),
     "formazione-specifica": ("ecm", "master", "formazione specifica"),
@@ -151,7 +193,21 @@ def normalize_text(value: str | None) -> str:
 
 
 def _contains_any(text: str, patterns: tuple[str, ...]) -> bool:
-    return any(normalize_text(pattern) in text for pattern in patterns)
+    for pattern in patterns:
+        normalized_pattern = normalize_text(pattern)
+        if not normalized_pattern:
+            continue
+        # Le sigle brevi devono essere token autonomi: "rsa" non deve
+        # classificare come anziani parole come "borsa" o "risorsa".
+        if " " not in normalized_pattern and len(normalized_pattern) <= 4:
+            if re.search(
+                rf"(?<![a-z0-9]){re.escape(normalized_pattern)}(?![a-z0-9])",
+                text,
+            ):
+                return True
+        elif normalized_pattern in text:
+            return True
+    return False
 
 
 def infer_category(text: str) -> str:
@@ -180,10 +236,17 @@ def extract_requirements(text: str) -> list[str]:
 
 def relevance_score(text: str) -> int:
     normalized = normalize_text(text)
-    score = 0
-    for term, weight in PSYCHOLOGY_TERMS.items():
-        if normalize_text(term) in normalized:
-            score += weight
+    score = sum(
+        max(
+            (weight for term, weight in group.items() if normalize_text(term) in normalized),
+            default=0,
+        )
+        for group in PSYCHOLOGY_TERM_GROUPS
+    )
+
+    # Un ruolo professionale esplicito e gia un segnale di alta pertinenza.
+    if PROFESSIONAL_ROLE_PATTERN.search(normalized):
+        score = max(score, 70)
 
     if "psicolog" in normalized and "albo" in normalized:
         score += 20

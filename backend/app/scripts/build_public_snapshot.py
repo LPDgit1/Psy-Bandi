@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import shutil
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
@@ -18,6 +19,11 @@ from app.services.public_snapshot import (
     validate_public_snapshot,
 )
 from app.services.source_probe import ensure_source_catalog
+from app.services.source_telemetry import (
+    append_github_step_summary,
+    collect_source_telemetry,
+    print_source_telemetry,
+)
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_OUTPUT = REPOSITORY_ROOT / "data" / "bandi.sqlite"
@@ -44,13 +50,20 @@ def build_snapshot(output: Path) -> bool:
         Base.metadata.create_all(bind=engine)
         with Session(engine) as session:
             ensure_source_catalog(session)
+            refresh_started_at = datetime.now(UTC)
             summaries = run_active_source_imports(session, remove_demo=True)
+            telemetry = collect_source_telemetry(session, since=refresh_started_at)
+            print_source_telemetry(telemetry)
+            append_github_step_summary(telemetry)
             refresh_deadline_statuses(session)
-            approved_count = session.scalar(
-                select(func.count()).select_from(Opportunity).where(
-                    Opportunity.editorial_status == "approved"
+            approved_count = (
+                session.scalar(
+                    select(func.count())
+                    .select_from(Opportunity)
+                    .where(Opportunity.editorial_status == "approved")
                 )
-            ) or 0
+                or 0
+            )
             successful = [summary for summary in summaries if summary.status == "success"]
             failed = [summary for summary in summaries if summary.status == "failed"]
             if not successful and not approved_count:
@@ -67,11 +80,11 @@ def build_snapshot(output: Path) -> bool:
             f"{report.source_count} fonti, {report.attachment_count} allegati."
         )
         print(
-            f"Import completati: {len(successful)}; "
-            f"fonti non disponibili: {len(failed)}."
+            f"Adapter completati: {len(successful)}; "
+            f"adapter non completati: {len(failed)}."
         )
         if failed:
-            print("Da ricontrollare: " + ", ".join(item.label for item in failed))
+            print("Adapter da ricontrollare: " + ", ".join(item.label for item in failed))
         return changed
 
 

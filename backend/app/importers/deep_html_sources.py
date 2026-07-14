@@ -28,6 +28,7 @@ from app.services.source_probe import (
     ensure_source_catalog,
     source_refresh_order,
 )
+from app.services.source_telemetry import start_source_attempt
 
 DEEP_SOURCE_TYPES = {
     "external-transparency",
@@ -77,6 +78,9 @@ DEEP_PSYCHOLOGY_TERMS = (
     "neuropsicolog",
     "lm-51",
     "lm 51",
+    "l-24",
+    "l 24",
+    "scienze e tecniche psicologiche",
     "psicodiagnostic",
     "valutazione psicologica",
     "test neuropsicologici",
@@ -85,6 +89,7 @@ DEEP_PSYCHOLOGY_TERMS = (
     "psicoeduc",
     "psicosocial",
     "salute mentale",
+    "benessere psicologico",
 )
 
 DEEP_DETAIL_PATTERNS = (
@@ -193,12 +198,7 @@ def collect_deep_links(html: str, base_url: str, *, limit: int | None = None) ->
 
 def _sources_for_deep_import(db: Session) -> list[Source]:
     ensure_source_catalog(db)
-    sources = list(
-        db.scalars(
-            select(Source)
-            .where(Source.source_type.in_(DEEP_SOURCE_TYPES))
-        )
-    )
+    sources = list(db.scalars(select(Source).where(Source.source_type.in_(DEEP_SOURCE_TYPES))))
     return source_refresh_order(sources)
 
 
@@ -246,10 +246,12 @@ def run_deep_html_sources_import(db: Session) -> ImportResult:
                 if time.monotonic() > import_deadline:
                     skipped += 1
                     continue
+                attempt = start_source_attempt(db, source)
                 try:
                     html = _fetch_text(client, source.base_url)
                     if html is None:
                         skipped += 1
+                        attempt.skipped()
                         continue
 
                     records_by_id: dict[str, CatalogRecord] = {
@@ -277,18 +279,18 @@ def run_deep_html_sources_import(db: Session) -> ImportResult:
                             page_html = _fetch_text(client, url)
                         except Exception:
                             skipped += 1
+                            attempt.skipped()
                             continue
                         if page_html is None:
                             skipped += 1
+                            attempt.skipped()
                             continue
                         visited_pages += 1
                         for record in parse_catalog_records(source, page_html, url):
                             records_by_id[record.external_id] = record
                         if depth >= MAX_DEEP_LINK_DEPTH:
                             continue
-                        remaining = (
-                            settings.deep_adapter_max_links_per_source - visited_pages
-                        )
+                        remaining = settings.deep_adapter_max_links_per_source - visited_pages
                         for nested_url in collect_deep_links(
                             page_html,
                             url,
@@ -305,6 +307,9 @@ def run_deep_html_sources_import(db: Session) -> ImportResult:
                     created += source_created
                     updated += source_updated
                     skipped += source_skipped
+                    attempt.created(source_created)
+                    attempt.updated(source_updated)
+                    attempt.skipped(source_skipped)
                     source.status = "active"
                     source.last_success_at = datetime.now(UTC)
                     source.last_error = None
@@ -313,6 +318,10 @@ def run_deep_html_sources_import(db: Session) -> ImportResult:
                     source.status = _probe_error_status(exc)
                     source.last_error = str(exc)
                     skipped += 1
+                    attempt.skipped()
+                    attempt.fail(exc)
+                finally:
+                    attempt.finish()
 
         run.status = "success"
     except Exception as exc:

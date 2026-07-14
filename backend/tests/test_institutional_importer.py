@@ -23,12 +23,18 @@ def test_direct_psychology_match_requires_professional_term() -> None:
     assert direct_psychology_match("Richiesta iscrizione all'albo degli psicologi")
     assert direct_psychology_match("Avviso per esperto di supporto psicologico")
     assert direct_psychology_match("Incarico per sportello di ascolto psicologico")
+    assert direct_psychology_match("Avviso per dottore in tecniche psicologiche")
+    assert direct_psychology_match("Profilo area psicologica classe L-24")
     assert not direct_psychology_match("Supporto psicologico per il personale")
+    assert not direct_psychology_match("Attivita psicosociali per il quartiere")
 
 
 def test_direct_match_accepts_psychological_service_inside_public_notice() -> None:
     assert direct_psychology_match(
         "Avviso pubblico per un servizio di sostegno psicologico agli studenti"
+    )
+    assert direct_psychology_match(
+        "Manifestazione di interesse per un servizio di benessere psicologico"
     )
 
 

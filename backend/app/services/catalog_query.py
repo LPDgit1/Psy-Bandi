@@ -113,13 +113,15 @@ def filter_items(
     status_filter: str | None,
     deadline: str | None,
     featured: bool | None,
+    apply_default_status: bool = True,
 ) -> list[Opportunity]:
     filtered: list[Opportunity] = []
     for item in items:
         if item.editorial_status != "approved":
             continue
         if (
-            not status_filter
+            apply_default_status
+            and not status_filter
             and deadline not in {"missing", "past"}
             and item.status not in DEFAULT_PUBLIC_STATUSES
         ):
@@ -290,6 +292,7 @@ def build_contextual_facets(
         status_filter=None,
         deadline=deadline,
         featured=featured,
+        apply_default_status=False,
     )
 
     return Facets(
@@ -298,15 +301,11 @@ def build_contextual_facets(
             region,
         ),
         provinces=_with_selected_facet(
-            _counter_to_facets(
-                Counter(item.province for item in province_items if item.province)
-            ),
+            _counter_to_facets(Counter(item.province for item in province_items if item.province)),
             selected_province,
         ),
         categories=_with_selected_facet(
-            _counter_to_facets(
-                Counter(item.category for item in category_items if item.category)
-            ),
+            _counter_to_facets(Counter(item.category for item in category_items if item.category)),
             category,
         ),
         entity_types=_with_selected_facet(

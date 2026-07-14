@@ -23,6 +23,7 @@ from app.services.classifier import build_search_text, classify_text, normalize_
 from app.services.dates import infer_status, parse_date
 from app.services.dedupe import content_hash
 from app.services.source_probe import _probe_error_status, ensure_source_catalog
+from app.services.source_telemetry import track_source_attempt
 
 API_BASE_URL = "https://sanita.puglia.it/AlboOnline/ao/"
 APP_BASE_URL = "https://sanita.puglia.it/aol/"
@@ -225,9 +226,7 @@ def _sources(db: Session) -> list[Source]:
     ensure_source_catalog(db)
     return list(
         db.scalars(
-            select(Source)
-            .where(Source.source_type == SOURCE_TYPE)
-            .order_by(Source.organization)
+            select(Source).where(Source.source_type == SOURCE_TYPE).order_by(Source.organization)
         )
     )
 
@@ -294,25 +293,32 @@ def run_puglia_aol_import(db: Session) -> ImportResult:
             },
         ) as client:
             for source in _sources(db):
-                try:
-                    skipped += _hide_non_primary_existing(db, source)
-                    for item in _fetch_items(client, source):
-                        if upsert_opportunity(
-                            db,
-                            payload=_payload(db, source, item),
-                            attachments=_attachments(source, item),
-                        ):
-                            created += 1
-                        else:
-                            updated += 1
-                    source.status = "active"
-                    source.last_success_at = datetime.now(UTC)
-                    source.last_error = None
-                    db.flush()
-                except Exception as exc:
-                    source.status = _probe_error_status(exc)
-                    source.last_error = str(exc)
-                    skipped += 1
+                with track_source_attempt(db, source) as attempt:
+                    try:
+                        hidden_count = _hide_non_primary_existing(db, source)
+                        skipped += hidden_count
+                        attempt.skipped(hidden_count)
+                        for item in _fetch_items(client, source):
+                            if upsert_opportunity(
+                                db,
+                                payload=_payload(db, source, item),
+                                attachments=_attachments(source, item),
+                            ):
+                                created += 1
+                                attempt.created()
+                            else:
+                                updated += 1
+                                attempt.updated()
+                        source.status = "active"
+                        source.last_success_at = datetime.now(UTC)
+                        source.last_error = None
+                        db.flush()
+                    except Exception as exc:
+                        source.status = _probe_error_status(exc)
+                        source.last_error = str(exc)
+                        skipped += 1
+                        attempt.skipped()
+                        attempt.fail(exc)
         run.status = "success"
     except Exception as exc:
         run.status = "failed"

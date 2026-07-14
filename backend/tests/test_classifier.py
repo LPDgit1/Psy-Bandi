@@ -72,3 +72,28 @@ def test_excludes_unrelated_notice() -> None:
 
     assert result.psychology_relevance == "esclusa"
     assert result.relevance_score == 0
+
+
+def test_short_acronyms_match_only_complete_tokens() -> None:
+    assert "anziani" not in classify_text("Borsa di studio per psicologo").areas
+    assert "anziani" not in classify_text("Selezione di una risorsa psicologa").areas
+    assert "anziani" in classify_text("Servizio psicologico in RSA").areas
+
+
+def test_detects_l24_and_section_b_requirements() -> None:
+    result = classify_text(
+        "Avviso per dottore in tecniche psicologiche",
+        "Richiesta laurea L-24 e iscrizione all'Albo degli psicologi, sezione B.",
+    )
+
+    assert result.psychology_relevance == "alta"
+    assert "laurea-psicologia" in result.requirements
+    assert "iscrizione-albo" in result.requirements
+    assert "albo-sezione-b" in result.requirements
+
+
+def test_relevance_does_not_double_count_overlapping_role_stems() -> None:
+    result = classify_text("Avviso per neuropsicologo")
+
+    assert result.psychology_relevance == "alta"
+    assert result.relevance_score == 70

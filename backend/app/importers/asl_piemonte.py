@@ -26,6 +26,7 @@ from app.services.classifier import build_search_text, classify_text, normalize_
 from app.services.dates import infer_status, parse_date
 from app.services.dedupe import content_hash
 from app.services.source_probe import _probe_error_status, ensure_source_catalog
+from app.services.source_telemetry import track_source_attempt
 
 ASL_PIEMONTE_SOURCE_NAMES = {
     "ASL AL - Bandi di concorso",
@@ -234,11 +235,7 @@ def _records_from_html(source: Source, html: str, page_url: str) -> list[Piemont
             continue
         all_links = container.find_all("a", href=True)
         link = next(
-            (
-                candidate
-                for candidate in all_links
-                if _is_usable_href(str(candidate["href"]))
-            ),
+            (candidate for candidate in all_links if _is_usable_href(str(candidate["href"]))),
             None,
         )
         if all_links and link is None:
@@ -373,7 +370,9 @@ def _source_links(source: Source, html: str) -> list[str]:
 def _sources(db: Session) -> list[Source]:
     ensure_source_catalog(db)
     return list(
-        db.scalars(select(Source).where(Source.name.in_(ASL_PIEMONTE_SOURCE_NAMES)).order_by(Source.name))
+        db.scalars(
+            select(Source).where(Source.name.in_(ASL_PIEMONTE_SOURCE_NAMES)).order_by(Source.name)
+        )
     )
 
 
@@ -420,32 +419,37 @@ def run_asl_piemonte_import(db: Session) -> ImportResult:
         ) as client:
             for source in _sources(db):
                 records_by_id: dict[str, PiemonteRecord] = {}
-                try:
-                    response = client.get(source.base_url)
-                    response.raise_for_status()
-                    urls = _source_links(source, response.text)
-                    for url in urls:
-                        page = response.text if url == source.base_url else client.get(url).text
-                        for record in parse_piemonte_records(source, page, url):
-                            records_by_id[record.external_id] = record
-                    for record in records_by_id.values():
-                        if upsert_opportunity(
-                            db,
-                            payload=_payload(db, source, record),
-                            attachments=[],
-                        ):
-                            created += 1
-                        else:
-                            updated += 1
-                    _hide_parser_artifacts(db, source)
-                    source.status = "active"
-                    source.last_success_at = datetime.now(UTC)
-                    source.last_error = None
-                    db.flush()
-                except Exception as exc:
-                    source.status = _probe_error_status(exc)
-                    source.last_error = str(exc)
-                    skipped += 1
+                with track_source_attempt(db, source) as attempt:
+                    try:
+                        response = client.get(source.base_url)
+                        response.raise_for_status()
+                        urls = _source_links(source, response.text)
+                        for url in urls:
+                            page = response.text if url == source.base_url else client.get(url).text
+                            for record in parse_piemonte_records(source, page, url):
+                                records_by_id[record.external_id] = record
+                        for record in records_by_id.values():
+                            if upsert_opportunity(
+                                db,
+                                payload=_payload(db, source, record),
+                                attachments=[],
+                            ):
+                                created += 1
+                                attempt.created()
+                            else:
+                                updated += 1
+                                attempt.updated()
+                        _hide_parser_artifacts(db, source)
+                        source.status = "active"
+                        source.last_success_at = datetime.now(UTC)
+                        source.last_error = None
+                        db.flush()
+                    except Exception as exc:
+                        source.status = _probe_error_status(exc)
+                        source.last_error = str(exc)
+                        skipped += 1
+                        attempt.skipped()
+                        attempt.fail(exc)
         run.status = "success"
     except Exception as exc:
         run.status = "failed"

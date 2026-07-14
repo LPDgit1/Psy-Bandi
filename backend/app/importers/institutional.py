@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Attachment, Opportunity
-from app.services.classifier import normalize_text
+from app.services.classifier import PROFESSIONAL_ROLE_PATTERN, normalize_text
 from app.services.dedupe import is_probable_duplicate
 
 AUTO_EXCLUSION_PREFIX = "Escluso automaticamente:"
@@ -30,8 +30,14 @@ PSYCHOLOGY_SEARCH_TERMS = (
     "sostegno psicologico",
     "consulenza psicologica",
     "servizio psicologico",
+    "benessere psicologico",
     "lm-51",
     "lm 51",
+    "l-24",
+    "l 24",
+    "scienze e tecniche psicologiche",
+    "dottore in tecniche psicologiche",
+    "dottoressa in tecniche psicologiche",
     "58/s",
     "albo psicologi",
     "psicologia clinica",
@@ -49,36 +55,35 @@ PSYCHOLOGY_QUERY_TERMS = (
     "psicoterap",
     "neuropsicolog",
     "lm-51",
+    "l-24",
+    "scienze e tecniche psicologiche",
+    "benessere psicologico",
     "psicodiagnostic",
     "psicoeduc",
     "psicosocial",
     "riabilitazione cognitiva",
     "salute mentale",
 )
-PROFESSIONAL_PATTERN = re.compile(
-    r"\bpsicolog(?:o|a|i|he|e)\b|"
-    r"\bpsicoterapeut(?:a|e|i)\b|"
-    r"\bneuropsicolog(?:o|a|i|he|e)\b"
-)
 QUALIFYING_PSYCHOLOGY_PATTERN = re.compile(
     r"\blaurea(?: magistrale)? in psicologia\b|"
     r"\blaure[ae][^.]{0,80}\bpsicolog|"
     r"\blm\s*[- ]?\s*51\b|"
+    r"\b(?:classe\s*)?l\s*[- ]?\s*24\b|"
     r"\bclasse\s*(?:lm\s*[- ]?\s*51|58\s*/?\s*s)\b|"
+    r"\bscienze e tecniche psicologiche\b|"
+    r"\bdottor(?:e|essa) in tecniche psicologiche\b|"
     r"\bspecializzazione (?:in )?psicoterapia\b|"
     r"\bdisciplina psicoterapia\b|"
     r"\bdisciplina (?:psicologia|neuropsicologia)\b|"
     r"\bpsicologia (?:clinica|dello sviluppo|del lavoro|scolastica|giuridica|"
-    r"di base|delle cure primarie|ospedaliera|della salute|di comunita|"
+    r"di base|delle cure primarie|ospedaliera|della salute|di comunita|sociale|"
+    r"delle organizzazioni|generale|sperimentale|dinamica|"
     r"dell emergenza)\b|"
     r"\bpsicodiagnostic\w*\b|"
     r"\bvalutazion[ei] psicologic\w*\b|"
     r"\btest neuropsicologic\w*\b|"
     r"\bvalutazione neuropsicologic\w*\b|"
     r"\briabilitazione cognitiv\w*\b|"
-    r"\bpsicopedagogic\w*\b|"
-    r"\bpsicoeducativ\w*\b|"
-    r"\bpsicosocial\w*\b|"
     r"\b(?:espert[oaie]|professionist[ai]|consulent[ei])[^.]{0,80}\bpsicologic\w*\b|"
     r"\b(?:avviso|bando|incarico|collaborazione|procedura|progetto|selezione)"
     r"[^.]{0,120}\b(?:assistenza|consulenza|sostegno|supporto|sportello|servizio|intervento)"
@@ -87,19 +92,33 @@ QUALIFYING_PSYCHOLOGY_PATTERN = re.compile(
     r"\balbo (?:professionale )?degli psicologi\b|"
     r"\biscrizione all albo[^.]{0,80}\bpsicolog"
 )
+OPPORTUNITY_CONTEXT_PATTERN = re.compile(
+    r"\b(?:avviso|bando|concorso|incarico|collaborazione|manifestazione|"
+    r"procedura|progetto|selezione|servizio)\b"
+)
+CONTEXTUAL_PSYCHOLOGY_PATTERN = re.compile(
+    r"\bpsicopedagogic\w*\b|"
+    r"\bpsicoeducativ\w*\b|"
+    r"\bpsicosocial\w*\b|"
+    r"\bbenessere psicologic\w*\b"
+)
 
 
 def direct_psychology_match(*parts: str | None) -> bool:
     normalized = normalize_text(" ".join(part or "" for part in parts))
     return bool(
-        PROFESSIONAL_PATTERN.search(normalized)
+        PROFESSIONAL_ROLE_PATTERN.search(normalized)
         or QUALIFYING_PSYCHOLOGY_PATTERN.search(normalized)
+        or (
+            OPPORTUNITY_CONTEXT_PATTERN.search(normalized)
+            and CONTEXTUAL_PSYCHOLOGY_PATTERN.search(normalized)
+        )
     )
 
 
 def professional_role_match(*parts: str | None) -> bool:
     normalized = normalize_text(" ".join(part or "" for part in parts))
-    return bool(PROFESSIONAL_PATTERN.search(normalized))
+    return bool(PROFESSIONAL_ROLE_PATTERN.search(normalized))
 
 
 def is_manually_hidden(opportunity: Opportunity) -> bool:

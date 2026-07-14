@@ -32,11 +32,10 @@ from app.services.source_probe import (
     ensure_source_catalog,
     source_refresh_order,
 )
+from app.services.source_telemetry import start_source_attempt
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
 
-TARGET_HEALTH_SOURCE_NAMES = {
-    definition["name"] for definition in TARGET_HEALTH_SOURCE_DEFINITIONS
-}
+TARGET_HEALTH_SOURCE_NAMES = {definition["name"] for definition in TARGET_HEALTH_SOURCE_DEFINITIONS}
 MAX_DETAIL_URLS_PER_SOURCE = 20
 MAX_RECORDS_PER_SOURCE = 25
 TOTAL_BUDGET_SECONDS = 120
@@ -162,9 +161,8 @@ def _is_relevant(text: str) -> bool:
         term in normalized for term in STRONG_OPPORTUNITY_TERMS
     ):
         return False
-    return (
-        (direct_psychology_match(text) or "neuropsicolog" in normalized)
-        and (_has_opportunity_terms(text) or professional_role_match(text))
+    return (direct_psychology_match(text) or "neuropsicolog" in normalized) and (
+        _has_opportunity_terms(text) or professional_role_match(text)
     )
 
 
@@ -174,9 +172,8 @@ def _source_search_urls(base_url: str) -> list[str]:
     search_indexes = [
         index
         for index, (key, value) in enumerate(query_items)
-        if key in SEARCH_QUERY_KEYS and any(
-            term in normalize_text(value) for term in ("psicolog", "psicoterap")
-        )
+        if key in SEARCH_QUERY_KEYS
+        and any(term in normalize_text(value) for term in ("psicolog", "psicoterap"))
     ]
     if not search_indexes:
         return [base_url]
@@ -584,6 +581,7 @@ def run_target_health_html_import(db: Session) -> ImportResult:
                 if time.monotonic() > import_deadline:
                     skipped += 1
                     continue
+                attempt = start_source_attempt(db, source)
                 try:
                     records_by_url: dict[str, TargetHealthRecord] = {}
                     for source_url in _source_search_urls(source.base_url):
@@ -593,6 +591,7 @@ def run_target_health_html_import(db: Session) -> ImportResult:
                         response.raise_for_status()
                         if not _is_textual_response(response):
                             skipped += 1
+                            attempt.skipped()
                             continue
 
                         records_by_url.update(
@@ -618,9 +617,11 @@ def run_target_health_html_import(db: Session) -> ImportResult:
                                 detail.raise_for_status()
                             except Exception:
                                 skipped += 1
+                                attempt.skipped()
                                 continue
                             if not _is_textual_response(detail):
                                 skipped += 1
+                                attempt.skipped()
                                 continue
                             detail_record = parse_target_health_detail(
                                 source,
@@ -643,8 +644,10 @@ def run_target_health_html_import(db: Session) -> ImportResult:
                             attachments=list(record.attachments),
                         ):
                             created += 1
+                            attempt.created()
                         else:
                             updated += 1
+                            attempt.updated()
                     source.status = "active"
                     source.last_success_at = datetime.now(UTC)
                     source.last_error = None
@@ -653,6 +656,10 @@ def run_target_health_html_import(db: Session) -> ImportResult:
                     source.status = _probe_error_status(exc)
                     source.last_error = str(exc)
                     skipped += 1
+                    attempt.skipped()
+                    attempt.fail(exc)
+                finally:
+                    attempt.finish()
         run.status = "success"
     except Exception as exc:
         run.status = "failed"

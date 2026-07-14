@@ -270,3 +270,50 @@ def test_area_facet_ignores_current_area_filter() -> None:
         ("psicoterapia", 1),
         ("psicologia-del-lavoro", 0),
     ]
+
+
+def test_status_facet_exposes_review_while_results_keep_public_default() -> None:
+    open_item = _opportunity(
+        title="Avviso aperto",
+        region="Lazio",
+        province="RM",
+        status="open",
+    )
+    review_item = _opportunity(
+        title="Avviso da verificare",
+        region="Lazio",
+        province="RM",
+        status="review",
+    )
+
+    default_results = _filter_items(
+        [open_item, review_item],
+        q=None,
+        region=None,
+        province=None,
+        category=None,
+        entity_type=None,
+        area=None,
+        status_filter=None,
+        deadline=None,
+        featured=None,
+    )
+    facets = _build_contextual_facets(
+        [open_item, review_item],
+        q=None,
+        region=None,
+        province=None,
+        selected_province=None,
+        category=None,
+        entity_type=None,
+        area=None,
+        status_filter=None,
+        deadline=None,
+        featured=None,
+    )
+
+    assert default_results == [open_item]
+    assert [(facet.value, facet.count) for facet in facets.statuses] == [
+        ("open", 1),
+        ("review", 1),
+    ]

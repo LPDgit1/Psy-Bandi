@@ -60,6 +60,19 @@ FILTER_WIDGET_KEYS = (
     "filter_sort",
     "page_size",
 )
+FILTER_DEFAULTS: dict[str, Any] = {
+    "search_query": "",
+    "filter_region": "",
+    "filter_province": "",
+    "filter_category": "",
+    "filter_entity_type": "",
+    "filter_area": "",
+    "filter_status": "",
+    "filter_deadline": "",
+    "filter_featured": False,
+    "filter_sort": "deadline",
+    "page_size": 20,
+}
 
 
 def snapshot_path() -> Path:
@@ -84,10 +97,36 @@ def _facet_label(value: str, values: list[Any], empty_label: str = "Tutte") -> s
 
 
 def _reset_filters() -> None:
-    for key in FILTER_WIDGET_KEYS:
-        st.session_state.pop(key, None)
+    for key, value in FILTER_DEFAULTS.items():
+        st.session_state[key] = value
+    st.session_state.page = 0
+    st.session_state.pop("filter_signature", None)
+    st.session_state.pop("selected_opportunity", None)
+
+
+def _initialize_filter_state() -> None:
+    for key, value in FILTER_DEFAULTS.items():
+        st.session_state.setdefault(key, value)
+
+
+def _reset_province() -> None:
+    st.session_state.filter_province = ""
     st.session_state.page = 0
     st.session_state.pop("selected_opportunity", None)
+
+
+def _context_filter_state() -> dict[str, Any]:
+    return {
+        "q": str(st.session_state.get("search_query", "")).strip() or None,
+        "region": st.session_state.get("filter_region") or None,
+        "province": st.session_state.get("filter_province") or None,
+        "category": st.session_state.get("filter_category") or None,
+        "entity_type": st.session_state.get("filter_entity_type") or None,
+        "area": st.session_state.get("filter_area") or None,
+        "status_filter": st.session_state.get("filter_status") or None,
+        "deadline": st.session_state.get("filter_deadline") or None,
+        "featured": True if st.session_state.get("filter_featured") else None,
+    }
 
 
 def _render_sidebar(facets: Any) -> dict[str, Any]:
@@ -103,6 +142,7 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
         _facet_options(facets.regions),
         format_func=lambda value: _facet_label(value, facets.regions),
         key="filter_region",
+        on_change=_reset_province,
     )
     province = st.sidebar.selectbox(
         "Provincia",
@@ -172,7 +212,6 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
     page_size = st.sidebar.select_slider(
         "Risultati per pagina",
         options=[10, 20, 50],
-        value=20,
         key="page_size",
     )
 
@@ -296,16 +335,19 @@ def _render_result(item: Any) -> None:
 
 
 def main() -> None:
+    _initialize_filter_state()
     st.title("Bandi Psicologia")
-    st.caption(
-        "Bandi, concorsi, avvisi e incarichi rilevanti per psicologhe e psicologi."
-    )
+    st.caption("Bandi, concorsi, avvisi e incarichi rilevanti per psicologhe e psicologi.")
 
     path = str(snapshot_path().resolve())
     catalog: StaticCatalog | None = None
     try:
         catalog = StaticCatalog(Path(path))
-        facets = catalog.facets()
+        facets = catalog.search(
+            **_context_filter_state(),
+            limit=1,
+            offset=0,
+        ).facets
     except SnapshotValidationError as exc:
         if catalog is not None:
             catalog.close()

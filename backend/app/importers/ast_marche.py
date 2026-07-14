@@ -26,6 +26,7 @@ from app.services.classifier import build_search_text, classify_text, normalize_
 from app.services.dates import infer_status, parse_date
 from app.services.dedupe import content_hash
 from app.services.source_probe import _probe_error_status, ensure_source_catalog
+from app.services.source_telemetry import track_source_attempt
 
 AST_MARCHE_SOURCE_NAMES = {
     "AST Ancona - Concorsi",
@@ -195,7 +196,9 @@ def parse_ast_marche_records(source: Source, html: str, page_url: str) -> list[A
 def _sources(db: Session) -> list[Source]:
     ensure_source_catalog(db)
     return list(
-        db.scalars(select(Source).where(Source.name.in_(AST_MARCHE_SOURCE_NAMES)).order_by(Source.name))
+        db.scalars(
+            select(Source).where(Source.name.in_(AST_MARCHE_SOURCE_NAMES)).order_by(Source.name)
+        )
     )
 
 
@@ -269,27 +272,36 @@ def run_ast_marche_import(db: Session) -> ImportResult:
             headers={"User-Agent": "BandiPsicologiaMVP/0.1 (+fonti pubbliche)"},
         ) as client:
             for source in _sources(db):
-                try:
-                    response = client.get(source.base_url)
-                    response.raise_for_status()
-                    records = parse_ast_marche_records(source, response.text, str(response.url))
-                    for record in records:
-                        if upsert_opportunity(
-                            db,
-                            payload=_payload(db, source, record),
-                            attachments=list(record.attachments),
-                        ):
-                            created += 1
-                        else:
-                            updated += 1
-                    source.status = "active"
-                    source.last_success_at = datetime.now(UTC)
-                    source.last_error = None
-                    db.flush()
-                except Exception as exc:
-                    source.status = _probe_error_status(exc)
-                    source.last_error = str(exc)
-                    skipped += 1
+                with track_source_attempt(db, source) as attempt:
+                    try:
+                        response = client.get(source.base_url)
+                        response.raise_for_status()
+                        records = parse_ast_marche_records(
+                            source,
+                            response.text,
+                            str(response.url),
+                        )
+                        for record in records:
+                            if upsert_opportunity(
+                                db,
+                                payload=_payload(db, source, record),
+                                attachments=list(record.attachments),
+                            ):
+                                created += 1
+                                attempt.created()
+                            else:
+                                updated += 1
+                                attempt.updated()
+                        source.status = "active"
+                        source.last_success_at = datetime.now(UTC)
+                        source.last_error = None
+                        db.flush()
+                    except Exception as exc:
+                        source.status = _probe_error_status(exc)
+                        source.last_error = str(exc)
+                        skipped += 1
+                        attempt.skipped()
+                        attempt.fail(exc)
         run.status = "success"
     except Exception as exc:
         run.status = "failed"

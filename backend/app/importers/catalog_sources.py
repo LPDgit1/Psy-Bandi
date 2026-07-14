@@ -35,6 +35,7 @@ from app.services.source_probe import (
     ensure_source_catalog,
     source_refresh_order,
 )
+from app.services.source_telemetry import start_source_attempt
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
 
 AUTO_HIDE_SAME_URL_NOTE = (
@@ -225,8 +226,7 @@ def _entity_type(source: Source) -> str:
     if "alma mater" in organization:
         return "universita"
     if any(
-        token in organization
-        for token in ("asl", "ast", "ats", "ausl", "usl", "azienda sanitaria")
+        token in organization for token in ("asl", "ast", "ats", "ausl", "usl", "azienda sanitaria")
     ):
         return "azienda-sanitaria"
     if any(
@@ -567,9 +567,8 @@ def _source_search_urls(source: Source) -> list[str]:
     search_indexes = [
         index
         for index, (key, value) in enumerate(query_items)
-        if key in SEARCH_QUERY_KEYS and any(
-            term in normalize_text(value) for term in ("psicolog", "psicoterap")
-        )
+        if key in SEARCH_QUERY_KEYS
+        and any(term in normalize_text(value) for term in ("psicolog", "psicoterap"))
     ]
     if not search_indexes:
         if source.source_type not in SEARCHABLE_HUB_SOURCE_TYPES:
@@ -653,10 +652,10 @@ def align_existing_catalog_record(
         return
     existing_records = list(
         db.scalars(
-        select(Opportunity).where(
-            Opportunity.source_id == source.id,
-            Opportunity.official_url == record.official_url,
-        )
+            select(Opportunity).where(
+                Opportunity.source_id == source.id,
+                Opportunity.official_url == record.official_url,
+            )
         )
     )
     if not existing_records:
@@ -704,8 +703,7 @@ def _sources_for_generic_import(db: Session) -> list[Source]:
     ensure_source_catalog(db)
     sources = list(
         db.scalars(
-            select(Source)
-            .where(
+            select(Source).where(
                 Source.source_type.in_(CATALOG_SOURCE_TYPES),
                 Source.source_type.not_in(DEEP_ADAPTER_SOURCE_TYPES),
             )
@@ -737,12 +735,14 @@ def run_catalog_sources_import(db: Session) -> ImportResult:
                 if time.monotonic() > import_deadline:
                     skipped += 1
                     continue
+                attempt = start_source_attempt(db, source)
                 try:
                     records_by_id: dict[str, CatalogRecord] = {}
                     for source_url in _source_search_urls(source):
                         html = _fetch_text(client, source_url)
                         if html is None:
                             skipped += 1
+                            attempt.skipped()
                             continue
 
                         records_by_id.update(
@@ -768,10 +768,9 @@ def run_catalog_sources_import(db: Session) -> ImportResult:
                             break
 
                     for record in list(records_by_id.values())[:MAX_RECORDS_PER_SOURCE]:
-                        if not _is_relevant_opportunity(
-                            f"{record.title} {record.description}"
-                        ):
+                        if not _is_relevant_opportunity(f"{record.title} {record.description}"):
                             skipped += 1
+                            attempt.skipped()
                             continue
                         align_existing_catalog_record(db, source, record)
                         if upsert_opportunity(
@@ -780,8 +779,10 @@ def run_catalog_sources_import(db: Session) -> ImportResult:
                             attachments=[],
                         ):
                             created += 1
+                            attempt.created()
                         else:
                             updated += 1
+                            attempt.updated()
 
                     source.status = "active"
                     source.last_success_at = datetime.now(UTC)
@@ -791,6 +792,10 @@ def run_catalog_sources_import(db: Session) -> ImportResult:
                     source.status = _probe_error_status(exc)
                     source.last_error = str(exc)
                     skipped += 1
+                    attempt.skipped()
+                    attempt.fail(exc)
+                finally:
+                    attempt.finish()
 
         run.status = "success"
     except Exception as exc:
