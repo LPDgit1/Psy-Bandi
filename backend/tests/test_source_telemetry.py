@@ -53,12 +53,15 @@ def test_tracks_each_attempted_source_and_excludes_unattempted_sources() -> None
     assert report.successful_source_count == 1
     assert report.failed_source_count == 1
     assert report.not_attempted_source_count == 1
-    assert [(item.source_name, item.status) for item in report.attempts] == [
-        ("Fonte riuscita", "success"),
-        ("Fonte fallita", "failed"),
-    ]
-    assert report.attempts[0].created_count == 2
-    assert report.attempts[0].updated_count == 1
+    attempts_by_source = {item.source_name: item for item in report.attempts}
+    assert {
+        name: item.status for name, item in attempts_by_source.items()
+    } == {
+        "Fonte riuscita": "success",
+        "Fonte fallita": "failed",
+    }
+    assert attempts_by_source["Fonte riuscita"].created_count == 2
+    assert attempts_by_source["Fonte riuscita"].updated_count == 1
 
 
 def test_unhandled_exception_marks_attempt_failed() -> None:

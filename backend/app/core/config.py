@@ -56,15 +56,26 @@ class Settings:
     azienda_zero_piemonte_max_pages: int = _int_env("AZIENDA_ZERO_PIEMONTE_MAX_PAGES", 8)
     asuit_max_pages: int = _int_env("ASUIT_MAX_PAGES", 8)
     ausl_romagna_max_pages: int = _int_env("AUSL_ROMAGNA_MAX_PAGES", 4)
+    catalog_sources_per_run: int = _int_env("CATALOG_SOURCES_PER_RUN", 50)
+    catalog_adapter_budget_seconds: int = _int_env(
+        "CATALOG_ADAPTER_BUDGET_SECONDS",
+        240,
+    )
     catalog_max_detail_links_per_source: int = _int_env(
         "CATALOG_MAX_DETAIL_LINKS_PER_SOURCE",
         4,
     )
+    target_health_sources_per_run: int = _int_env("TARGET_HEALTH_SOURCES_PER_RUN", 15)
+    target_health_budget_seconds: int = _int_env(
+        "TARGET_HEALTH_BUDGET_SECONDS",
+        360,
+    )
+    deep_adapter_sources_per_run: int = _int_env("DEEP_ADAPTER_SOURCES_PER_RUN", 12)
     deep_adapter_max_links_per_source: int = _int_env(
         "DEEP_ADAPTER_MAX_LINKS_PER_SOURCE",
         24,
     )
-    deep_adapter_budget_seconds: int = _int_env("DEEP_ADAPTER_BUDGET_SECONDS", 300)
+    deep_adapter_budget_seconds: int = _int_env("DEEP_ADAPTER_BUDGET_SECONDS", 900)
     public_refresh_cooldown_seconds: int = _int_env("PUBLIC_REFRESH_COOLDOWN_SECONDS", 300)
     alert_scheduler_enabled: bool = _bool_env("ALERT_SCHEDULER_ENABLED", False)
     alert_scheduler_initial_delay_seconds: int = _int_env(

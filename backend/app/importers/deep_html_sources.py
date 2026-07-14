@@ -26,7 +26,7 @@ from app.models import ImportRun, Source
 from app.services.source_probe import (
     _probe_error_status,
     ensure_source_catalog,
-    source_refresh_order,
+    source_rotation_batch,
 )
 from app.services.source_telemetry import start_source_attempt
 
@@ -199,7 +199,11 @@ def collect_deep_links(html: str, base_url: str, *, limit: int | None = None) ->
 def _sources_for_deep_import(db: Session) -> list[Source]:
     ensure_source_catalog(db)
     sources = list(db.scalars(select(Source).where(Source.source_type.in_(DEEP_SOURCE_TYPES))))
-    return source_refresh_order(sources)
+    return source_rotation_batch(
+        sources,
+        batch_size=settings.deep_adapter_sources_per_run,
+        group_name="adapter profondi",
+    )
 
 
 def _upsert_records(

@@ -33,7 +33,7 @@ from app.services.dedupe import content_hash
 from app.services.source_probe import (
     _probe_error_status,
     ensure_source_catalog,
-    source_refresh_order,
+    source_rotation_batch,
 )
 from app.services.source_telemetry import start_source_attempt
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
@@ -100,7 +100,6 @@ BLOCK_STATUSES = {"retired"}
 MAX_DETAIL_LINKS_PER_SOURCE = settings.catalog_max_detail_links_per_source
 MAX_RECORDS_PER_SOURCE = 30
 MAX_RECORD_TEXT = 2400
-TOTAL_BUDGET_SECONDS = 90
 SEARCH_QUERY_KEYS = {"combine", "q", "s", "search", "text"}
 SEARCHABLE_HUB_SOURCE_TYPES = {"wordpress-html-hub"}
 DEEP_ADAPTER_SOURCE_TYPES = {"external-transparency", "hospital-html-hub", "pat-html"}
@@ -701,7 +700,7 @@ def _fetch_text(client: httpx.Client, url: str) -> str | None:
 
 def _sources_for_generic_import(db: Session) -> list[Source]:
     ensure_source_catalog(db)
-    sources = list(
+    catalogued = list(
         db.scalars(
             select(Source).where(
                 Source.source_type.in_(CATALOG_SOURCE_TYPES),
@@ -709,7 +708,16 @@ def _sources_for_generic_import(db: Session) -> list[Source]:
             )
         )
     )
-    return source_refresh_order(sources)
+    sources = [
+        source
+        for source in catalogued
+        if source.name not in SPECIFIC_ADAPTER_SOURCE_NAMES and source.status not in BLOCK_STATUSES
+    ]
+    return source_rotation_batch(
+        sources,
+        batch_size=settings.catalog_sources_per_run,
+        group_name="fonti generiche",
+    )
 
 
 def run_catalog_sources_import(db: Session) -> ImportResult:
@@ -727,7 +735,7 @@ def run_catalog_sources_import(db: Session) -> ImportResult:
             follow_redirects=True,
             headers={"User-Agent": "BandiPsicologiaMVP/0.1 (+fonti pubbliche)"},
         ) as client:
-            import_deadline = time.monotonic() + TOTAL_BUDGET_SECONDS
+            import_deadline = time.monotonic() + settings.catalog_adapter_budget_seconds
             for source in _sources_for_generic_import(db):
                 if source.name in SPECIFIC_ADAPTER_SOURCE_NAMES or source.status in BLOCK_STATUSES:
                     skipped += 1

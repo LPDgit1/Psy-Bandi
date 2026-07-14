@@ -5,6 +5,7 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
 from app.central_health_catalog import CENTRAL_HEALTH_SOURCE_DEFINITIONS
+from app.core.config import settings
 from app.hospital_health_catalog import HOSPITAL_HEALTH_SOURCE_DEFINITIONS
 from app.importers.arcs_fvg import ARCS_FVG_SOURCE_NAME
 from app.importers.asdaa_alto_adige import ASDAA_SOURCE_NAME
@@ -16,13 +17,18 @@ from app.importers.ats_liguria import ATS_LIGURIA_SOURCE_NAME
 from app.importers.ausl_romagna import AUSL_ROMAGNA_SOURCE_NAME
 from app.importers.azienda_zero import AZIENDA_ZERO_SOURCE_NAME
 from app.importers.azienda_zero_piemonte import AZIENDA_ZERO_PIEMONTE_SOURCE_NAME
-from app.importers.catalog_sources import SPECIFIC_ADAPTER_SOURCE_NAMES, _entity_type
+from app.importers.catalog_sources import (
+    SPECIFIC_ADAPTER_SOURCE_NAMES,
+    _entity_type,
+    _sources_for_generic_import,
+)
 from app.importers.comune_venezia import COMUNE_VENEZIA_SOURCE_NAME
+from app.importers.deep_html_sources import _sources_for_deep_import
 from app.importers.inail import INAIL_SOURCE_NAME
 from app.importers.inpa import INPA_SOURCE_NAME
 from app.importers.inps import INPS_SOURCE_NAME
 from app.importers.myportal_veneto import TREVISO
-from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES
+from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES, _sources
 from app.importers.usl_umbria1 import USL_UMBRIA1_SOURCE_NAME
 from app.importers.usl_umbria2 import USL_UMBRIA2_SOURCE_NAME
 from app.ministerial_catalog import MINISTERIAL_SOURCE_DEFINITIONS
@@ -40,6 +46,8 @@ from app.services.source_probe import (
     _probe_success_status,
     ensure_source_catalog,
     source_refresh_order,
+    source_rotation_batch,
+    source_rotation_slot,
 )
 from app.source_catalog import VERIFIED_SOURCE_CATALOG
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
@@ -730,3 +738,77 @@ def test_source_refresh_order_prioritizes_never_checked_then_oldest() -> None:
     )
 
     assert source_refresh_order([recent, older, never]) == [never, older, recent]
+
+
+def test_source_rotation_slot_changes_every_twelve_hours() -> None:
+    morning = datetime(2026, 7, 15, 5, 17, tzinfo=UTC)
+    evening = datetime(2026, 7, 15, 17, 17, tzinfo=UTC)
+
+    assert source_rotation_slot(evening) == source_rotation_slot(morning) + 1
+
+
+def test_source_rotation_batch_covers_all_sources_across_consecutive_slots() -> None:
+    sources = [
+        Source(name=name, base_url=f"https://{name.lower()}.test")
+        for name in ("E", "C", "A", "D", "B")
+    ]
+
+    batches = [
+        source_rotation_batch(
+            sources,
+            batch_size=2,
+            group_name="test",
+            slot=slot,
+        )
+        for slot in range(3)
+    ]
+
+    assert [[source.name for source in batch] for batch in batches] == [
+        ["A", "B"],
+        ["C", "D"],
+        ["E", "A"],
+    ]
+    assert {source.name for batch in batches for source in batch} == {
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+    }
+
+
+def test_source_rotation_batch_appends_github_summary(monkeypatch, tmp_path) -> None:
+    summary_path = tmp_path / "summary.md"
+    monkeypatch.setenv("GITHUB_STEP_SUMMARY", str(summary_path))
+    sources = [
+        Source(name=name, base_url=f"https://{name.lower()}.test") for name in ("A", "B", "C")
+    ]
+
+    selected = source_rotation_batch(
+        sources,
+        batch_size=2,
+        group_name="fonti test",
+        slot=4,
+    )
+
+    assert len(selected) == 2
+    summary = summary_path.read_text(encoding="utf-8")
+    assert "Rotazione fonti test" in summary
+    assert "2** fonti su **3" in summary
+    assert "2 esecuzioni" in summary
+
+
+def test_collective_adapters_select_configured_rotation_batch_sizes() -> None:
+    engine = create_engine("sqlite:///:memory:")
+    Base.metadata.create_all(bind=engine)
+
+    with Session(engine) as db:
+        generic_sources = _sources_for_generic_import(db)
+        target_sources = _sources(db)
+        deep_sources = _sources_for_deep_import(db)
+        generic_names = {source.name for source in generic_sources}
+
+    assert len(generic_sources) == settings.catalog_sources_per_run
+    assert len(target_sources) == settings.target_health_sources_per_run
+    assert len(deep_sources) == settings.deep_adapter_sources_per_run
+    assert not generic_names & SPECIFIC_ADAPTER_SOURCE_NAMES

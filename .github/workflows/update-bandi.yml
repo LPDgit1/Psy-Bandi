@@ -26,7 +26,7 @@ concurrency:
 jobs:
   update-snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 80
 
     steps:
       - name: Scarica il repository
@@ -46,6 +46,12 @@ jobs:
         env:
           PYTHONPATH: backend
           PYTHONUNBUFFERED: "1"
+          CATALOG_SOURCES_PER_RUN: "50"
+          CATALOG_ADAPTER_BUDGET_SECONDS: "240"
+          TARGET_HEALTH_SOURCES_PER_RUN: "15"
+          TARGET_HEALTH_BUDGET_SECONDS: "360"
+          DEEP_ADAPTER_SOURCES_PER_RUN: "12"
+          DEEP_ADAPTER_BUDGET_SECONDS: "900"
         run: python -m app.scripts.build_public_snapshot --output data/bandi.sqlite
 
       - name: Pubblica lo snapshot se è cambiato

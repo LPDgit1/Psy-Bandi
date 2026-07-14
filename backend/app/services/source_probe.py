@@ -1,6 +1,9 @@
 from __future__ import annotations
 
+import math
+import os
 from datetime import UTC, datetime
+from pathlib import Path
 
 import httpx
 from sqlalchemy import select
@@ -10,6 +13,8 @@ from app.core.config import settings
 from app.importers.inail import INAIL_SOURCE_NAME, build_inail_ssl_context
 from app.models import Source
 from app.source_catalog import VERIFIED_SOURCE_CATALOG
+
+ROTATION_WINDOW_SECONDS = 12 * 60 * 60
 
 
 def _probe_error_status(exc: Exception) -> str:
@@ -43,6 +48,60 @@ def source_refresh_order(sources: list[Source]) -> list[Source]:
     return sorted(sources, key=key)
 
 
+def source_rotation_slot(now: datetime | None = None) -> int:
+    current = now or datetime.now(UTC)
+    if current.tzinfo is None:
+        current = current.replace(tzinfo=UTC)
+    return int(current.timestamp()) // ROTATION_WINDOW_SECONDS
+
+
+def source_rotation_batch(
+    sources: list[Source],
+    *,
+    batch_size: int,
+    group_name: str,
+    slot: int | None = None,
+) -> list[Source]:
+    ordered = sorted(sources, key=lambda source: source.name.casefold())
+    total = len(ordered)
+    selected_slot = source_rotation_slot() if slot is None else slot
+    effective_size = min(max(batch_size, 0), total)
+
+    if not total or not effective_size:
+        selected: list[Source] = []
+        start = 0
+    elif effective_size == total:
+        selected = ordered
+        start = 0
+    else:
+        start = (selected_slot * effective_size) % total
+        selected = [ordered[(start + offset) % total] for offset in range(effective_size)]
+
+    cycle_runs = math.ceil(total / effective_size) if effective_size else 0
+    message = (
+        f"Rotazione {group_name}: slot={selected_slot}, "
+        f"selezionate={len(selected)}/{total}, partenza={start}, "
+        f"copertura_teorica={cycle_runs} esecuzioni."
+    )
+    print(message)
+
+    summary_path = os.getenv("GITHUB_STEP_SUMMARY")
+    if summary_path:
+        path = Path(summary_path)
+        try:
+            with path.open("a", encoding="utf-8") as summary:
+                summary.write(
+                    f"### Rotazione {group_name}\n\n"
+                    f"Selezionate **{len(selected)}** fonti su **{total}** nello slot "
+                    f"`{selected_slot}`; copertura teorica entro "
+                    f"**{cycle_runs} esecuzioni**.\n\n"
+                )
+        except OSError as exc:
+            print(f"Riepilogo GitHub non scrivibile per {group_name}: {exc}")
+
+    return selected
+
+
 def ensure_source_catalog(db: Session) -> list[Source]:
     sources: list[Source] = []
     for candidate in VERIFIED_SOURCE_CATALOG:
@@ -66,19 +125,18 @@ def probe_source_catalog(db: Session) -> list[Source]:
         "follow_redirects": True,
         "headers": {"User-Agent": "BandiPsicologiaMVP/0.1 (+probe fonti pubbliche)"},
     }
-    with httpx.Client(
-        timeout=20,
-        verify=settings.source_probe_verify_tls,
-        follow_redirects=True,
-        headers={"User-Agent": "BandiPsicologiaMVP/0.1 (+probe fonti pubbliche)"},
-    ) as client, httpx.Client(
-        verify=(
-            build_inail_ssl_context()
-            if settings.source_probe_verify_tls
-            else False
-        ),
-        **common_options,
-    ) as inail_client:
+    with (
+        httpx.Client(
+            timeout=20,
+            verify=settings.source_probe_verify_tls,
+            follow_redirects=True,
+            headers={"User-Agent": "BandiPsicologiaMVP/0.1 (+probe fonti pubbliche)"},
+        ) as client,
+        httpx.Client(
+            verify=(build_inail_ssl_context() if settings.source_probe_verify_tls else False),
+            **common_options,
+        ) as inail_client,
+    ):
         for source in sources:
             try:
                 probe_client = inail_client if source.name == INAIL_SOURCE_NAME else client

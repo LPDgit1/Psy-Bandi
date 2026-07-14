@@ -30,7 +30,7 @@ from app.services.dedupe import content_hash
 from app.services.source_probe import (
     _probe_error_status,
     ensure_source_catalog,
-    source_refresh_order,
+    source_rotation_batch,
 )
 from app.services.source_telemetry import start_source_attempt
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
@@ -38,7 +38,6 @@ from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
 TARGET_HEALTH_SOURCE_NAMES = {definition["name"] for definition in TARGET_HEALTH_SOURCE_DEFINITIONS}
 MAX_DETAIL_URLS_PER_SOURCE = 20
 MAX_RECORDS_PER_SOURCE = 25
-TOTAL_BUDGET_SECONDS = 120
 SEARCH_QUERY_KEYS = {"combine", "q", "s", "search", "text"}
 
 OPPORTUNITY_TERMS = (
@@ -554,10 +553,10 @@ def _sources(db: Session) -> list[Source]:
             .order_by(Source.region, Source.name)
         )
     )
-    ordered = source_refresh_order(sources)
-    return sorted(
-        ordered,
-        key=lambda source: source.import_method != "target-health-html-search",
+    return source_rotation_batch(
+        sources,
+        batch_size=settings.target_health_sources_per_run,
+        group_name="fonti sanitarie mirate",
     )
 
 
@@ -576,7 +575,7 @@ def run_target_health_html_import(db: Session) -> ImportResult:
             follow_redirects=True,
             headers={"User-Agent": "BandiPsicologiaMVP/0.1 (+fonti pubbliche)"},
         ) as client:
-            import_deadline = time.monotonic() + TOTAL_BUDGET_SECONDS
+            import_deadline = time.monotonic() + settings.target_health_budget_seconds
             for source in _sources(db):
                 if time.monotonic() > import_deadline:
                     skipped += 1
