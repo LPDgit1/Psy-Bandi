@@ -8,16 +8,16 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.public import (
-    _build_contextual_facets,
-    _build_facets,
-    _detail,
-    _filter_items,
-    _list_item,
-    _sort_items,
-)
 from app.models import Opportunity
 from app.schemas import Facets, OpportunityDetail, OpportunityListResponse
+from app.services.catalog_query import (
+    build_contextual_facets,
+    build_facets,
+    detail,
+    filter_items,
+    list_item,
+    sort_items,
+)
 from app.services.public_snapshot import SnapshotReport, validate_public_snapshot
 
 
@@ -58,7 +58,7 @@ class StaticCatalog:
             return list(session.scalars(statement).all())
 
     def facets(self) -> Facets:
-        return _build_facets(self._items())
+        return build_facets(self._items())
 
     def search(
         self,
@@ -77,7 +77,7 @@ class StaticCatalog:
         offset: int = 0,
     ) -> OpportunityListResponse:
         items = self._items(relationships=True)
-        filtered = _filter_items(
+        filtered = filter_items(
             items,
             q=q,
             region=region,
@@ -89,13 +89,13 @@ class StaticCatalog:
             deadline=deadline,
             featured=featured,
         )
-        sorted_items = _sort_items(filtered, sort)
+        sorted_items = sort_items(filtered, sort)
         return OpportunityListResponse(
-            items=[_list_item(item) for item in sorted_items[offset : offset + limit]],
+            items=[list_item(item) for item in sorted_items[offset : offset + limit]],
             total=len(filtered),
             limit=limit,
             offset=offset,
-            facets=_build_contextual_facets(
+            facets=build_contextual_facets(
                 items,
                 q=q,
                 region=region,
@@ -124,4 +124,4 @@ class StaticCatalog:
         )
         with Session(self.engine) as session:
             opportunity = session.scalar(statement)
-            return _detail(opportunity) if opportunity is not None else None
+            return detail(opportunity) if opportunity is not None else None

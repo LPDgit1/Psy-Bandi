@@ -20,18 +20,12 @@ st.set_page_config(
 
 BACKEND_DIR = Path(__file__).resolve().parent
 REPOSITORY_ROOT = BACKEND_DIR.parent
-CACHE_DEPENDENCY_PATHS = (
-    Path(__file__).resolve(),
-    BACKEND_DIR / "app" / "api" / "public.py",
-    BACKEND_DIR / "app" / "services" / "static_catalog.py",
-)
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from app.services.public_snapshot import SnapshotValidationError  # noqa: E402
 from app.services.static_catalog import StaticCatalog  # noqa: E402
 from app.streamlit_support import (  # noqa: E402
-    cache_revision,
     format_compensation,
     format_date,
     format_datetime,
@@ -74,60 +68,6 @@ def snapshot_path() -> Path:
         return REPOSITORY_ROOT / "data" / "bandi.sqlite"
     path = Path(configured)
     return path if path.is_absolute() else REPOSITORY_ROOT / path
-
-
-@st.cache_resource(show_spinner=False, max_entries=2)
-def load_catalog(path: str, revision: str) -> StaticCatalog:
-    return StaticCatalog(Path(path))
-
-
-@st.cache_data(show_spinner=False)
-def load_facets(path: str, revision: str) -> Any:
-    return load_catalog(path, revision).facets()
-
-
-@st.cache_data(show_spinner=False)
-def search_opportunities(
-    path: str,
-    revision: str,
-    q: str | None,
-    region: str | None,
-    province: str | None,
-    category: str | None,
-    entity_type: str | None,
-    area: str | None,
-    status_filter: str | None,
-    deadline: str | None,
-    featured: bool | None,
-    sort: str,
-    limit: int,
-    offset: int,
-) -> Any:
-    return load_catalog(path, revision).search(
-        q=q,
-        region=region,
-        province=province,
-        category=category,
-        entity_type=entity_type,
-        area=area,
-        status_filter=status_filter,
-        deadline=deadline,
-        featured=featured,
-        sort=sort,
-        limit=limit,
-        offset=offset,
-    )
-
-
-@st.cache_data(show_spinner=False)
-def load_opportunity(path: str, revision: str, opportunity_id: str) -> Any:
-    return load_catalog(path, revision).detail(opportunity_id)
-
-
-def _clear_data_cache() -> None:
-    load_facets.clear()
-    search_opportunities.clear()
-    load_opportunity.clear()
 
 
 def _facet_options(values: list[Any]) -> list[str]:
@@ -252,13 +192,7 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
     }
 
 
-def _render_detail(path: str, revision: str, opportunity_id: str) -> None:
-    try:
-        detail = load_opportunity(path, revision, opportunity_id)
-    except Exception:
-        logger.exception("Unable to load opportunity detail")
-        st.error("Il dettaglio non è disponibile in questo momento.")
-        return
+def _render_detail(detail: Any | None) -> None:
     if detail is None:
         st.warning("Il bando selezionato non è più presente nell'archivio pubblico.")
         return
@@ -368,11 +302,13 @@ def main() -> None:
     )
 
     path = str(snapshot_path().resolve())
+    catalog: StaticCatalog | None = None
     try:
-        revision = cache_revision(Path(path), CACHE_DEPENDENCY_PATHS)
-        catalog = load_catalog(path, revision)
-        facets = load_facets(path, revision)
+        catalog = StaticCatalog(Path(path))
+        facets = catalog.facets()
     except SnapshotValidationError as exc:
+        if catalog is not None:
+            catalog.close()
         logger.warning("Public snapshot unavailable: %s", exc)
         st.error(
             "L'archivio pubblico non è ancora disponibile. Nel repository apri "
@@ -380,9 +316,13 @@ def main() -> None:
         )
         st.stop()
     except Exception:
+        if catalog is not None:
+            catalog.close()
         logger.exception("Unable to open the public snapshot")
         st.error("L'archivio pubblico non è leggibile in questo momento.")
         st.stop()
+
+    assert catalog is not None
 
     generated_at = datetime.fromisoformat(catalog.snapshot.generated_at)
     st.caption(
@@ -400,20 +340,21 @@ def main() -> None:
     page = int(st.session_state.get("page", 0))
 
     try:
-        response = search_opportunities(
-            path,
-            revision,
+        response = catalog.search(
             **filters,
             offset=page * filters["limit"],
         )
+        selected_id = st.session_state.get("selected_opportunity")
+        detail = catalog.detail(selected_id) if selected_id else None
     except Exception:
         logger.exception("Streamlit opportunity search failed")
         st.error("La ricerca non è disponibile in questo momento. Riprova tra poco.")
         st.stop()
+    finally:
+        catalog.close()
 
-    selected_id = st.session_state.get("selected_opportunity")
     if selected_id:
-        _render_detail(path, revision, selected_id)
+        _render_detail(detail)
 
     result_label = "risultato" if response.total == 1 else "risultati"
     st.subheader(f"{response.total} {result_label}")

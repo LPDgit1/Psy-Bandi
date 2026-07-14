@@ -1,7 +1,12 @@
 from datetime import UTC, datetime
 
-from app.api.public import _build_contextual_facets, _filter_items
 from app.models import Opportunity
+from app.services.catalog_query import (
+    build_contextual_facets as _build_contextual_facets,
+)
+from app.services.catalog_query import (
+    filter_items as _filter_items,
+)
 
 
 def _opportunity(
