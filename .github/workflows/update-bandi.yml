@@ -26,7 +26,7 @@ concurrency:
 jobs:
   update-snapshot:
     runs-on: ubuntu-latest
-    timeout-minutes: 80
+    timeout-minutes: 180
 
     steps:
       - name: Scarica il repository
@@ -39,10 +39,7 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
 
-      - name: Installa le dipendenze
-        run: python -m pip install --disable-pip-version-check -r backend/requirements.txt
-
-      - name: Aggiorna e valida lo snapshot pubblico
+      - name: Aggiorna e pubblica lo snapshot pubblico
         env:
           PYTHONPATH: backend
           PYTHONUNBUFFERED: "1"
@@ -52,29 +49,35 @@ jobs:
           TARGET_HEALTH_BUDGET_SECONDS: "360"
           DEEP_ADAPTER_SOURCES_PER_RUN: "12"
           DEEP_ADAPTER_BUDGET_SECONDS: "900"
-        run: python -m app.scripts.build_public_snapshot --output data/bandi.sqlite
-
-      - name: Pubblica lo snapshot se è cambiato
         run: |
-          git add --force data/bandi.sqlite
-          if git diff --cached --quiet; then
-            echo "Nessuna variazione nei dati pubblici."
-            exit 0
-          fi
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Aggiorna archivio pubblico bandi"
+
           for attempt in 1 2 3; do
+            echo "::group::Tentativo di aggiornamento ${attempt}/3"
             git fetch origin main
-            if ! git rebase origin/main; then
-              git rebase --abort
-              echo "::error::Impossibile riallineare lo snapshot con origin/main."
-              exit 1
-            fi
-            if git push origin HEAD:main; then
+            git reset --hard origin/main
+
+            python -m pip install --disable-pip-version-check -r backend/requirements.txt
+            python -m app.scripts.build_public_snapshot --output data/bandi.sqlite
+
+            git add --force data/bandi.sqlite
+            if git diff --cached --quiet; then
+              echo "Nessuna variazione nei dati pubblici."
+              echo "::endgroup::"
               exit 0
             fi
-            echo "Il branch remoto e' cambiato durante il push; nuovo tentativo ${attempt}/3."
+
+            git commit -m "Aggiorna archivio pubblico bandi"
+            if git push origin HEAD:main; then
+              echo "::endgroup::"
+              exit 0
+            fi
+
+            echo "::endgroup::"
+            echo "::warning::origin/main è cambiato durante il tentativo ${attempt}/3; lo snapshot verrà ricostruito sulla versione più recente."
           done
-          echo "::error::Pubblicazione dello snapshot non riuscita dopo 3 tentativi."
+
+          echo "::error::Pubblicazione non riuscita dopo 3 ricostruzioni dello snapshot."
           exit 1
