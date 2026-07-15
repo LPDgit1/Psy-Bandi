@@ -26,7 +26,6 @@ if str(BACKEND_DIR) not in sys.path:
 from app.services.public_snapshot import SnapshotValidationError  # noqa: E402
 from app.services.static_catalog import StaticCatalog  # noqa: E402
 from app.streamlit_support import (  # noqa: E402
-    format_compensation,
     format_date,
     format_datetime,
     label_for,
@@ -228,7 +227,6 @@ def _reset_filters() -> None:
         st.session_state[key] = value
     st.session_state.page = 0
     st.session_state.pop("filter_signature", None)
-    st.session_state.pop("selected_opportunity", None)
 
 
 def _initialize_filter_state() -> None:
@@ -239,13 +237,11 @@ def _initialize_filter_state() -> None:
 def _reset_province() -> None:
     st.session_state.filter_province = ""
     st.session_state.page = 0
-    st.session_state.pop("selected_opportunity", None)
 
 
 def _reset_status_for_review_toggle() -> None:
     st.session_state.filter_status = ""
     st.session_state.page = 0
-    st.session_state.pop("selected_opportunity", None)
 
 
 def _context_filter_state() -> dict[str, Any]:
@@ -411,82 +407,6 @@ def _render_sidebar(facets: Any) -> dict[str, Any]:
     }
 
 
-def _render_detail(detail: Any | None) -> None:
-    if detail is None:
-        st.warning("Il bando selezionato non è più presente nell'archivio pubblico.")
-        return
-
-    header, close = st.columns([8, 1])
-    with header:
-        st.subheader(detail.title)
-        st.caption(f"{detail.organization} · {label_for(detail.status)}")
-    with close:
-        if st.button("Chiudi", key="close_detail"):
-            st.session_state.pop("selected_opportunity", None)
-            st.rerun()
-
-    st.info(
-        "Le informazioni sono riassunte per facilitare la consultazione. "
-        "Prima di candidarti verifica sempre il testo pubblicato dall'ente."
-    )
-
-    columns = st.columns(4)
-    columns[0].metric("Scadenza", format_date(detail.deadline))
-    columns[1].metric("Regione", detail.region or "Non indicata")
-    columns[2].metric("Posti", detail.positions or "Non indicati")
-    columns[3].metric(
-        "Compenso",
-        format_compensation(
-            detail.compensation_min,
-            detail.compensation_max,
-            detail.compensation_period,
-        ),
-    )
-
-    left, right = st.columns(2)
-    with left:
-        st.write("**Tipologia:**", label_for(detail.category))
-        st.write("**Tipo ente:**", label_for(detail.entity_type))
-        st.write("**Pubblicazione:**", format_date(detail.published_at))
-        st.write("**Contratto:**", detail.contract_type or "Non indicato")
-    with right:
-        st.write("**Provincia:**", detail.province or "Non indicata")
-        st.write("**Comune:**", detail.municipality or "Non indicato")
-        st.write("**Durata:**", detail.duration or "Non indicata")
-        st.write("**Candidatura:**", detail.application_mode or "Verificare sulla fonte")
-
-    if detail.areas:
-        st.write("**Ambiti:**", " · ".join(label_for(area) for area in detail.areas))
-    if detail.requirements:
-        st.write(
-            "**Requisiti estratti:**",
-            " · ".join(label_for(value) for value in detail.requirements),
-        )
-    description = detail.description or detail.short_description or detail.summary
-    if description:
-        st.markdown("#### Riepilogo")
-        st.write(description)
-
-    official_url = safe_http_url(detail.official_url)
-    if official_url:
-        st.link_button("Apri la fonte ufficiale", official_url, type="primary")
-
-    valid_attachments = [
-        (attachment.title, safe_http_url(attachment.url)) for attachment in detail.attachments
-    ]
-    valid_attachments = [(title, url) for title, url in valid_attachments if url]
-    if valid_attachments:
-        st.markdown("#### Allegati")
-        for title, url in valid_attachments:
-            st.link_button(title, url)
-
-    st.caption(
-        f"Fonte: {detail.source_name or 'non indicata'} · "
-        f"Ultimo aggiornamento: {format_datetime(detail.updated_at)}"
-    )
-    st.divider()
-
-
 def _render_result(item: Any) -> None:
     with st.container(border=True):
         safe_title = html.escape(item.title)
@@ -539,22 +459,17 @@ def _render_result(item: Any) -> None:
             )
             st.markdown(chips, unsafe_allow_html=True)
 
-        actions = st.columns([1.2, 1.6, 4])
-        if actions[0].button(
-            "Vedi dettagli",
-            key=f"detail_{item.id}",
-            type="primary",
-            use_container_width=True,
-        ):
-            st.session_state.selected_opportunity = item.id
-            st.rerun()
         official_url = safe_http_url(item.official_url)
         if official_url:
-            actions[1].link_button(
-                "Fonte ufficiale",
+            action, _spacer = st.columns([2.6, 4.4])
+            action.link_button(
+                "Apri il bando sul sito ufficiale",
                 official_url,
+                type="primary",
                 use_container_width=True,
             )
+        else:
+            st.caption("Il collegamento alla fonte ufficiale non è disponibile.")
 
 
 def main() -> None:
@@ -598,7 +513,6 @@ def main() -> None:
     if st.session_state.get("filter_signature") != signature:
         st.session_state.filter_signature = signature
         st.session_state.page = 0
-        st.session_state.pop("selected_opportunity", None)
     page = int(st.session_state.get("page", 0))
 
     try:
@@ -606,17 +520,12 @@ def main() -> None:
             **filters,
             offset=page * filters["limit"],
         )
-        selected_id = st.session_state.get("selected_opportunity")
-        detail = catalog.detail(selected_id) if selected_id else None
     except Exception:
         logger.exception("Streamlit opportunity search failed")
         st.error("La ricerca non è disponibile in questo momento. Riprova tra poco.")
         st.stop()
     finally:
         catalog.close()
-
-    if selected_id:
-        _render_detail(detail)
 
     result_label = "risultato" if response.total == 1 else "risultati"
     if filters["status_filter"]:

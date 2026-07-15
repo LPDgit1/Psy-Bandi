@@ -181,7 +181,7 @@ restano visibili nel probe come `tls-review`.
 - catalogo e probe per fonti istituzionali pubbliche aperte
 - seed/importer dimostrativo opzionale con bandi realistici
 - classificatore rule-based per pertinenza, ambiti, requisiti e tipologia
-- frontend embedded con ricerca, filtri, dettaglio e form alert
+- frontend Streamlit con ricerca, filtri e collegamento diretto alle fonti ufficiali
 - test unitari per classificazione, date e deduplicazione
 
 ## Fonti collegate
