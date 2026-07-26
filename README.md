@@ -39,9 +39,9 @@ minimizzato e lo salva nel repository soltanto quando i dati cambiano. Il nuovo
 commit provoca automaticamente il redeploy di Streamlit Community Cloud.
 
 Le fonti con adapter specifici vengono controllate a ogni esecuzione. I cataloghi
-più ampi usano invece lotti deterministici che cambiano ogni 12 ore: 50 fonti
+più ampi usano invece lotti deterministici che cambiano ogni 12 ore: 75 fonti
 generiche, 15 fonti sanitarie mirate e 12 adapter profondi. La configurazione
-garantisce la copertura teorica completa rispettivamente entro 36, 36 e 48 ore,
+garantisce la copertura teorica completa rispettivamente entro 24, 36 e 48 ore,
 salvo timeout o indisponibilità dei siti remoti. Il riepilogo di ogni esecuzione
 Actions mostra sia il lotto pianificato sia le fonti effettivamente interrogate.
 
