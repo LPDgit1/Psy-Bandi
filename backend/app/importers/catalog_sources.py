@@ -76,6 +76,10 @@ SPECIFIC_ADAPTER_SOURCE_NAMES = {
     *(definition["name"] for definition in TARGET_HEALTH_SOURCE_DEFINITIONS),
 }
 
+ALWAYS_REFRESH_SOURCE_NAMES = {
+    "Gazzetta Ufficiale - 4a Serie Speciale Concorsi ed Esami",
+}
+
 CATALOG_SOURCE_TYPES = {
     "external-transparency",
     "hospital-html-hub",
@@ -713,11 +717,17 @@ def _sources_for_generic_import(db: Session) -> list[Source]:
         for source in catalogued
         if source.name not in SPECIFIC_ADAPTER_SOURCE_NAMES and source.status not in BLOCK_STATUSES
     ]
-    return source_rotation_batch(
-        sources,
+    always_refresh = sorted(
+        (source for source in sources if source.name in ALWAYS_REFRESH_SOURCE_NAMES),
+        key=lambda source: source.name.casefold(),
+    )
+    rotating = [source for source in sources if source.name not in ALWAYS_REFRESH_SOURCE_NAMES]
+    selected = source_rotation_batch(
+        rotating,
         batch_size=settings.catalog_sources_per_run,
         group_name="fonti generiche",
     )
+    return [*always_refresh, *selected]
 
 
 def run_catalog_sources_import(db: Session) -> ImportResult:

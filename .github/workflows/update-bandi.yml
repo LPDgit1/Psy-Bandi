@@ -43,11 +43,11 @@ jobs:
         env:
           PYTHONPATH: backend
           PYTHONUNBUFFERED: "1"
-          CATALOG_SOURCES_PER_RUN: "75"
+          CATALOG_SOURCES_PER_RUN: "100"
           CATALOG_ADAPTER_BUDGET_SECONDS: "360"
-          TARGET_HEALTH_SOURCES_PER_RUN: "15"
+          TARGET_HEALTH_SOURCES_PER_RUN: "41"
           TARGET_HEALTH_BUDGET_SECONDS: "360"
-          DEEP_ADAPTER_SOURCES_PER_RUN: "12"
+          DEEP_ADAPTER_SOURCES_PER_RUN: "13"
           DEEP_ADAPTER_BUDGET_SECONDS: "900"
         run: |
           set -euo pipefail

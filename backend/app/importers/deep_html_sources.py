@@ -201,8 +201,8 @@ def _sources_for_deep_import(db: Session) -> list[Source]:
     sources = list(db.scalars(select(Source).where(Source.source_type.in_(DEEP_SOURCE_TYPES))))
     return source_rotation_batch(
         sources,
-        batch_size=settings.deep_adapter_sources_per_run,
-        group_name="adapter profondi",
+        batch_size=max(settings.deep_adapter_sources_per_run, len(sources)),
+        group_name="adapter profondi (tutti)",
     )
 
 

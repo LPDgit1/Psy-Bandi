@@ -555,8 +555,8 @@ def _sources(db: Session) -> list[Source]:
     )
     return source_rotation_batch(
         sources,
-        batch_size=settings.target_health_sources_per_run,
-        group_name="fonti sanitarie mirate",
+        batch_size=max(settings.target_health_sources_per_run, len(sources)),
+        group_name="fonti sanitarie mirate (tutte)",
     )
 
 

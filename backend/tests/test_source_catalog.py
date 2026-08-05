@@ -18,6 +18,7 @@ from app.importers.ausl_romagna import AUSL_ROMAGNA_SOURCE_NAME
 from app.importers.azienda_zero import AZIENDA_ZERO_SOURCE_NAME
 from app.importers.azienda_zero_piemonte import AZIENDA_ZERO_PIEMONTE_SOURCE_NAME
 from app.importers.catalog_sources import (
+    ALWAYS_REFRESH_SOURCE_NAMES,
     SPECIFIC_ADAPTER_SOURCE_NAMES,
     _entity_type,
     _sources_for_generic_import,
@@ -808,7 +809,10 @@ def test_collective_adapters_select_configured_rotation_batch_sizes() -> None:
         deep_sources = _sources_for_deep_import(db)
         generic_names = {source.name for source in generic_sources}
 
-    assert len(generic_sources) == settings.catalog_sources_per_run
-    assert len(target_sources) == settings.target_health_sources_per_run
-    assert len(deep_sources) == settings.deep_adapter_sources_per_run
+    assert len(generic_sources) == settings.catalog_sources_per_run + len(
+        ALWAYS_REFRESH_SOURCE_NAMES
+    )
+    assert ALWAYS_REFRESH_SOURCE_NAMES <= generic_names
+    assert len(target_sources) == len(TARGET_HEALTH_SOURCE_DEFINITIONS)
+    assert len(deep_sources) >= settings.deep_adapter_sources_per_run
     assert not generic_names & SPECIFIC_ADAPTER_SOURCE_NAMES
