@@ -8,6 +8,7 @@ from app.central_health_catalog import CENTRAL_HEALTH_SOURCE_DEFINITIONS
 from app.core.config import settings
 from app.hospital_health_catalog import HOSPITAL_HEALTH_SOURCE_DEFINITIONS
 from app.importers.arcs_fvg import ARCS_FVG_SOURCE_NAME
+from app.importers.asl_bi import ASL_BI_SOURCE_NAME
 from app.importers.asdaa_alto_adige import ASDAA_SOURCE_NAME
 from app.importers.asl_piemonte import ASL_PIEMONTE_SOURCE_NAMES
 from app.importers.asl_roma2 import ASL_ROMA2_SOURCE_NAME
@@ -29,6 +30,7 @@ from app.importers.inail import INAIL_SOURCE_NAME
 from app.importers.inpa import INPA_SOURCE_NAME
 from app.importers.inps import INPS_SOURCE_NAME
 from app.importers.myportal_veneto import TREVISO
+from app.importers.ministerial_sources import MINISTERIAL_SOURCE_NAMES
 from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES, _sources
 from app.importers.usl_umbria1 import USL_UMBRIA1_SOURCE_NAME
 from app.importers.usl_umbria2 import USL_UMBRIA2_SOURCE_NAME
@@ -168,6 +170,8 @@ def test_specific_adapter_registry_matches_implemented_connectors() -> None:
         INAIL_SOURCE_NAME,
         INPA_SOURCE_NAME,
         INPS_SOURCE_NAME,
+        ASL_BI_SOURCE_NAME,
+        *MINISTERIAL_SOURCE_NAMES,
         TREVISO.source_name,
         USL_UMBRIA1_SOURCE_NAME,
         USL_UMBRIA2_SOURCE_NAME,
@@ -200,6 +204,8 @@ def test_every_adapter_family_is_scheduled_for_public_refresh() -> None:
         "run_deep_html_sources_import",
         "run_inail_import",
         "run_inps_import",
+        "run_asl_bi_import",
+        "run_ministerial_sources_import",
         "run_myportal_treviso_import",
         "run_puglia_aol_import",
         "run_target_health_html_import",
@@ -257,6 +263,10 @@ def test_catalog_excludes_robots_blocked_asl_bi_from_automatic_probe() -> None:
 
     assert "ASL BI" not in organizations
     assert len(NORTHERN_HEALTH_SOURCE_DEFINITIONS) == 27
+    asl_bi = next(
+        source for source in VERIFIED_SOURCE_CATALOG if source["organization"] == "ASL BI"
+    )
+    assert asl_bi["source_type"] == "aslbi-csv"
 
 
 def test_catalog_includes_verified_central_health_network() -> None:
@@ -316,6 +326,7 @@ def test_catalog_includes_target_regional_health_and_social_network() -> None:
         "ASP Caltanissetta",
         "AREUS Sardegna",
         "ARES Sardegna",
+        "ASP Vibo Valentia",
     } <= organizations
     counts_by_region = {
         region: sum(
@@ -460,11 +471,8 @@ def test_non_automated_health_sources_do_not_enter_refresh_catalog() -> None:
         source["organization"] for source in NON_AUTOMATED_HEALTH_SOURCE_DEFINITIONS
     }
 
-    assert {
-        "ASL BI",
-        "ASP Vibo Valentia",
-        "Azienda Zero Calabria",
-    } <= non_automated_organizations
+    assert {"Azienda Zero Calabria"} <= non_automated_organizations
+    assert {"ASL BI", "ASP Vibo Valentia"} <= automated_organizations
     assert automated_organizations.isdisjoint(non_automated_organizations)
 
 
@@ -516,10 +524,25 @@ def test_catalog_includes_ministerial_sources_and_marks_maeci_for_review() -> No
         "Ministero del Lavoro e delle Politiche Sociali",
         "Ministero dell'Istruzione e del Merito",
         "Ministero degli Affari Esteri e della Cooperazione Internazionale",
+        "Ministero dell'Interno",
+        "Polizia di Stato",
+        "Corpo Nazionale dei Vigili del Fuoco",
+        "Ministero della Difesa",
+        "Ministero della Difesa - PERSOMIL",
     } <= set(sources_by_org)
     assert sources_by_org[
         "Ministero degli Affari Esteri e della Cooperazione Internazionale"
     ]["source_type"] == "ministerial-access-review"
+    assert all(
+        sources_by_org[organization]["source_type"] == "ministerial-html-hub"
+        for organization in {
+            "Ministero dell'Interno",
+            "Polizia di Stato",
+            "Corpo Nazionale dei Vigili del Fuoco",
+            "Ministero della Difesa",
+            "Ministero della Difesa - PERSOMIL",
+        }
+    )
 
 
 def test_catalog_entity_type_recognizes_health_acronyms() -> None:

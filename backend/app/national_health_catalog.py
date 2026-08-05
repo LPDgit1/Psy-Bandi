@@ -344,13 +344,6 @@ NATIONAL_HEALTH_SOURCE_DEFINITIONS = [
 
 NON_AUTOMATED_HEALTH_SOURCE_DEFINITIONS = [
     {
-        "name": "ASL BI - Bandi concorso reclutamento personale",
-        "base_url": "https://trasparenza.aslbi.piemonte.it/bandi-concorso-reclutamento-personale?sf=102",
-        "region": "Piemonte",
-        "organization": "ASL BI",
-        "reason": "Verifica manuale: robots.txt vieta il crawl delle procedure.",
-    },
-    {
         "name": "Azienda Zero Calabria",
         "base_url": "",
         "region": "Calabria",
@@ -358,16 +351,6 @@ NON_AUTOMATED_HEALTH_SOURCE_DEFINITIONS = [
         "reason": (
             "Equivalente regionale individuato, ma nessuna fonte concorsi pubblica "
             "stabile e risolvibile e stata confermata per import automatico."
-        ),
-    },
-    {
-        "name": "ASP Vibo Valentia - Ricerca concorsi psicologia",
-        "base_url": "https://www.aspvv.it/?s=psicolog",
-        "region": "Calabria",
-        "organization": "ASP Vibo Valentia",
-        "reason": (
-            "Verifica manuale: il portale risponde 403 agli accessi automatici; "
-            "serve un endpoint o adapter compatibile."
         ),
     },
 ]

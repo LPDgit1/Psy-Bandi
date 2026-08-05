@@ -1,6 +1,6 @@
 # Fonti catalogate e usate
 
-Totale fonti: 208
+Totale fonti: 283
 
 Nota: la fonte demo e ritirata non e inclusa. Le fonti private/sociali catalogate sono fonti potenziali e richiedono adapter dedicato prima di import automatici estesi.
 
@@ -20,6 +20,7 @@ Nota: la fonte demo e ritirata non e inclusa. Le fonti private/sociali catalogat
 
 ## Calabria
 - ASP Crotone - ASP Crotone - Bandi di concorso [target-health-html] - https://asp.crotone.it/bandi-di-concorso/
+- ASP Vibo Valentia - ASP Vibo Valentia - Bandi di concorso [target-health-html] - https://www.aspvv.it/index.php/amministrazione-trasparente-3/bandi-di-concorso
 - Comune di Catanzaro - Comune di Catanzaro - Concorsi attivi [html-list] - https://old.comune.catanzaro.it/amm-trasparente/bandi-di-concorso/concorsi-attivi/
 
 ## Campania
@@ -138,11 +139,17 @@ Nota: la fonte demo e ritirata non e inclusa. Le fonti private/sociali catalogat
 - INAIL - INAIL - Avvisi [html-archive] - https://www.inail.it/portale/it/inail-comunica/avvisi.html
 - INPS - INPS - Concorsi e mobilita [public-json-api] - https://www.inps.it/it/it/avvisi-bandi-e-fatturazione/fatturazione-concorsi.html
 - Istituto Poligrafico e Zecca dello Stato - Gazzetta Ufficiale - 4a Serie Speciale Concorsi ed Esami [html-pdf-index] - https://www.gazzettaufficiale.it/30giorni/concorsi
+- Ministero dell'Interno - Ministero dell'Interno - Bandi di concorso [ministerial-html-hub] - https://www.interno.gov.it/it/amministrazione-trasparente/bandi-concorso
+- Polizia di Stato - Polizia di Stato - Concorsi [ministerial-html-hub] - https://www.poliziadistato.it/articolo/1129
+- Corpo Nazionale dei Vigili del Fuoco - Vigili del Fuoco - Concorsi pubblici [ministerial-html-hub] - https://www.vigilfuoco.it/servizi-ai-cittadini/concorsi-pubblici
+- Ministero della Difesa - Ministero della Difesa - Concorsi Online [ministerial-html-hub] - https://concorsi.difesa.it/default.aspx/ei/
+- Ministero della Difesa - PERSOMIL - Ministero della Difesa - Concorsi per ufficiali (PERSOMIL) [ministerial-html-hub] - https://www.difesa.it/amministrazione-trasparente/bandiconcorsopersomil/concorsi/uff/index.html
 - La Nostra Famiglia - La Nostra Famiglia - Lavora con noi [private-social-jobs] - https://lanostrafamiglia.it/lavora-con-noi/
 - Ministero del Lavoro e delle Politiche Sociali - Ministero Lavoro - Terzo settore [html-hub] - https://www.lavoro.gov.it/temi-e-priorita/terzo-settore-e-responsabilita-sociale-imprese/Pagine/default.aspx
 - Telefono Azzurro - Telefono Azzurro - Lavora con noi [private-social-jobs] - https://telefonoazzurro.altamiraweb.com
 
 ## Piemonte
+- ASL BI - ASL BI - Bandi concorso reclutamento personale [aslbi-csv] - https://trasparenza.aslbi.piemonte.it/bandi-concorso-reclutamento-personale?sf=102
 - ASL AL - ASL AL - Bandi di concorso [html-list] - https://www.aslal.it/bandi-di-concorso
 - ASL AT - ASL AT - Concorsi in vigore [xml-index] - https://trasparenza.asl.at.it/DL33/concorsiinvigore.xml
 - ASL CN1 - ASL CN1 - Concorsi pubblici e avvisi [html-list] - https://www.aslcn1.it/amministrazione-trasparente/bandi-di-concorso/concorsi-pubblici-e-avvisi

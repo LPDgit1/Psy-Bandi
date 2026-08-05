@@ -65,7 +65,7 @@ class Settings:
         "CATALOG_MAX_DETAIL_LINKS_PER_SOURCE",
         4,
     )
-    target_health_sources_per_run: int = _int_env("TARGET_HEALTH_SOURCES_PER_RUN", 41)
+    target_health_sources_per_run: int = _int_env("TARGET_HEALTH_SOURCES_PER_RUN", 42)
     target_health_budget_seconds: int = _int_env(
         "TARGET_HEALTH_BUDGET_SECONDS",
         360,

@@ -311,6 +311,19 @@ TARGET_HEALTH_SOURCE_DEFINITIONS = [
         "technical_notes": "Pagina pubblica di Amministrazione Trasparente dell'ASP Crotone.",
     },
     {
+        "name": "ASP Vibo Valentia - Bandi di concorso",
+        "source_type": "target-health-html",
+        "base_url": "https://www.aspvv.it/index.php/amministrazione-trasparente-3/bandi-di-concorso",
+        "region": "Calabria",
+        "organization": "ASP Vibo Valentia",
+        "import_method": "target-health-html-detail",
+        "technical_notes": (
+            "Pagina Joomla ufficiale dei bandi di concorso ASP Vibo Valentia; "
+            "l'adapter segue la paginazione e apre solo schede con riferimento "
+            "psicologico o a profili professionali pertinenti."
+        ),
+    },
+    {
         "name": "ASP Messina - Bandi e concorsi",
         "source_type": "target-health-html",
         "base_url": "https://www.asp.messina.it/asp-comunica/bandi-e-concorsi/?bandotype=Bando",

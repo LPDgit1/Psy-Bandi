@@ -26,6 +26,7 @@ from app.importers.institutional import (
     professional_role_match,
     upsert_opportunity,
 )
+from app.ministerial_catalog import MINISTERIAL_SOURCE_DEFINITIONS
 from app.models import ImportRun, Opportunity, Source
 from app.services.classifier import build_search_text, classify_text, normalize_text
 from app.services.dates import infer_status, parse_date
@@ -58,6 +59,7 @@ SPECIFIC_ADAPTER_SOURCE_NAMES = {
     "Comune di Treviso - Bandi di concorso",
     "INAIL - Avvisi",
     "INPS - Concorsi e mobilita",
+    "ASL BI - Bandi concorso reclutamento personale",
     "ASL AL - Bandi di concorso",
     "ASL AT - Concorsi in vigore",
     "ASL CN1 - Concorsi pubblici e avvisi",
@@ -74,6 +76,11 @@ SPECIFIC_ADAPTER_SOURCE_NAMES = {
     "AST Macerata - Concorsi",
     "AST Pesaro Urbino - Concorsi",
     *(definition["name"] for definition in TARGET_HEALTH_SOURCE_DEFINITIONS),
+    *(
+        definition["name"]
+        for definition in MINISTERIAL_SOURCE_DEFINITIONS
+        if definition["source_type"] == "ministerial-html-hub"
+    ),
 }
 
 ALWAYS_REFRESH_SOURCE_NAMES = {
@@ -98,6 +105,8 @@ CATALOG_SOURCE_TYPES = {
     "third-sector-hub",
     "wordpress-html-hub",
     "xml-index",
+    "ministerial-html-hub",
+    "aslbi-csv",
 }
 
 BLOCK_STATUSES = {"retired"}

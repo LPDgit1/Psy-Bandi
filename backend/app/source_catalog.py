@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from app.aslbi_catalog import ASL_BI_SOURCE_DEFINITIONS
 from app.central_health_catalog import CENTRAL_HEALTH_SOURCE_DEFINITIONS
 from app.hospital_health_catalog import HOSPITAL_HEALTH_SOURCE_DEFINITIONS
 from app.ministerial_catalog import MINISTERIAL_SOURCE_DEFINITIONS
@@ -1389,6 +1390,9 @@ VERIFIED_SOURCE_CATALOG.extend(
 )
 VERIFIED_SOURCE_CATALOG.extend(
     _source(**definition) for definition in HOSPITAL_HEALTH_SOURCE_DEFINITIONS
+)
+VERIFIED_SOURCE_CATALOG.extend(
+    _source(**definition) for definition in ASL_BI_SOURCE_DEFINITIONS
 )
 VERIFIED_SOURCE_CATALOG.extend(
     _source(**definition) for definition in MINISTERIAL_SOURCE_DEFINITIONS

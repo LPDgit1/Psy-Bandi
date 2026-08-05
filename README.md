@@ -40,7 +40,7 @@ commit provoca automaticamente il redeploy di Streamlit Community Cloud.
 
 Le fonti con adapter specifici vengono controllate a ogni esecuzione, compresi
 inPA e Gazzetta Ufficiale. A ogni intervallo di 12 ore vengono inoltre interrogate
-le 41 fonti sanitarie mirate e tutti i 13 adapter profondi; il lotto deterministico
+le 42 fonti sanitarie mirate e tutti gli adapter profondi catalogati; il lotto deterministico
 comprende 100 fonti generiche (la Gazzetta resta sempre inclusa). La configurazione
 garantisce la copertura teorica completa del catalogo generico entro 24 ore,
 salvo timeout o indisponibilità dei siti remoti. Il riepilogo di ogni esecuzione
