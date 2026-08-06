@@ -1,8 +1,8 @@
-from app.models import Source
 from app.importers.regional_municipal import (
     collect_regional_municipal_detail_links,
     parse_regional_municipal_records,
 )
+from app.models import Source
 from app.regional_municipal_catalog import (
     MUNICIPAL_CAPITAL_SOURCE_DEFINITIONS,
     REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS,
