@@ -34,15 +34,16 @@ bandi-psicologia/
 
 L'interfaccia Streamlit legge in sola lettura `data/bandi.sqlite`: non richiede
 FastAPI, React, Docker, PostgreSQL, account aggiuntivi o Secrets. GitHub Actions
-interroga le fonti pubbliche due volte al giorno, genera uno snapshot SQLite
+interroga le fonti pubbliche una volta al giorno in fascia notturna, genera uno snapshot SQLite
 minimizzato e lo salva nel repository soltanto quando i dati cambiano. Il nuovo
 commit provoca automaticamente il redeploy di Streamlit Community Cloud.
 
 Le fonti con adapter specifici vengono controllate a ogni esecuzione, compresi
-inPA e Gazzetta Ufficiale. A ogni intervallo di 12 ore vengono inoltre interrogate
+inPA e Gazzetta Ufficiale. A ogni controllo notturno vengono inoltre interrogate
 le 42 fonti sanitarie mirate e tutti gli adapter profondi catalogati; il lotto deterministico
-comprende 100 fonti generiche (la Gazzetta resta sempre inclusa). La configurazione
-garantisce la copertura teorica completa del catalogo generico entro 24 ore,
+comprende fino a 200 fonti generiche (la Gazzetta resta sempre inclusa). La configurazione
+garantisce la copertura teorica completa del catalogo generico entro le esecuzioni
+previste dalla rotazione,
 salvo timeout o indisponibilità dei siti remoti. Il riepilogo di ogni esecuzione
 Actions mostra sia il lotto pianificato sia le fonti effettivamente interrogate.
 

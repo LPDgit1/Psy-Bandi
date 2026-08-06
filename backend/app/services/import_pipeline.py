@@ -25,6 +25,7 @@ from app.importers.inpa import run_inpa_import
 from app.importers.inps import run_inps_import
 from app.importers.myportal_veneto import run_myportal_treviso_import
 from app.importers.ministerial_sources import run_ministerial_sources_import
+from app.importers.public_institutions import run_public_institution_sources_import
 from app.importers.puglia_aol import run_puglia_aol_import
 from app.importers.target_health_html import run_target_health_html_import
 from app.importers.usl_umbria1 import run_usl_umbria1_import
@@ -47,6 +48,10 @@ INSTITUTIONAL_IMPORTERS: list[tuple[str, Importer]] = [
     ("INPS", run_inps_import),
     ("ASL BI - export CSV ufficiali", run_asl_bi_import),
     ("Interno, Polizia, Vigili del Fuoco e Difesa", run_ministerial_sources_import),
+    (
+        "Salute, ricerca, giustizia, MUR, famiglia e USR",
+        run_public_institution_sources_import,
+    ),
 ]
 
 PUBLIC_REFRESH_IMPORTERS: list[tuple[str, Importer]] = [

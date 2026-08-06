@@ -31,6 +31,7 @@ from app.importers.inpa import INPA_SOURCE_NAME
 from app.importers.inps import INPS_SOURCE_NAME
 from app.importers.myportal_veneto import TREVISO
 from app.importers.ministerial_sources import MINISTERIAL_SOURCE_NAMES
+from app.importers.public_institutions import PUBLIC_INSTITUTION_SOURCE_NAMES
 from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES, _sources
 from app.importers.usl_umbria1 import USL_UMBRIA1_SOURCE_NAME
 from app.importers.usl_umbria2 import USL_UMBRIA2_SOURCE_NAME
@@ -54,6 +55,7 @@ from app.services.source_probe import (
 )
 from app.source_catalog import VERIFIED_SOURCE_CATALOG
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
+from app.public_institution_catalog import PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
 
 
 def test_catalog_includes_all_veneto_provincial_capitals() -> None:
@@ -178,6 +180,7 @@ def test_specific_adapter_registry_matches_implemented_connectors() -> None:
         *ASL_PIEMONTE_SOURCE_NAMES,
         *AST_MARCHE_SOURCE_NAMES,
         *TARGET_HEALTH_SOURCE_NAMES,
+        *PUBLIC_INSTITUTION_SOURCE_NAMES,
     }
 
     assert SPECIFIC_ADAPTER_SOURCE_NAMES == implemented_connector_sources
@@ -206,6 +209,7 @@ def test_every_adapter_family_is_scheduled_for_public_refresh() -> None:
         "run_inps_import",
         "run_asl_bi_import",
         "run_ministerial_sources_import",
+        "run_public_institution_sources_import",
         "run_myportal_treviso_import",
         "run_puglia_aol_import",
         "run_target_health_html_import",
@@ -545,6 +549,28 @@ def test_catalog_includes_ministerial_sources_and_marks_maeci_for_review() -> No
     )
 
 
+def test_catalog_includes_public_institutions_and_all_official_usr() -> None:
+    names = {source["name"] for source in PUBLIC_INSTITUTION_SOURCE_DEFINITIONS}
+    assert {
+        "Ministero della Salute - Bandi di concorso",
+        "Istituto Superiore di Sanita - Bandi di concorso",
+        "CNR - Selezioni online",
+        "Istituto Italiano di Tecnologia - Openings",
+        "Dipartimento della Protezione Civile - Bandi di concorso",
+        "Ministero della Giustizia - Concorsi, esami, selezioni e assunzioni",
+        "Ministero per la Famiglia - Avvisi e opportunita",
+        "Ministero dell'Universita e della Ricerca - Concorsi e avvisi",
+        "Ministero dell'Universita e della Ricerca - CONCORSIMUR",
+    } <= names
+    assert len([name for name in names if name.startswith("Ufficio Scolastico Regionale ")]) == 18
+    assert not any("DAP" in name or "Amministrazione Penitenziaria" in name for name in names)
+    assert all(
+        source["source_type"] == "public-institution-html"
+        and source["base_url"].startswith("https://")
+        for source in PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
+    )
+
+
 def test_catalog_entity_type_recognizes_health_acronyms() -> None:
     aulss = Source(organization="AULSS 6 Euganea", base_url="https://example.test")
     asp = Source(organization="ASP Palermo", base_url="https://example.test")
@@ -832,7 +858,8 @@ def test_collective_adapters_select_configured_rotation_batch_sizes() -> None:
         deep_sources = _sources_for_deep_import(db)
         generic_names = {source.name for source in generic_sources}
 
-    assert len(generic_sources) == settings.catalog_sources_per_run + len(
+    generic_pool_size = len(generic_sources) - len(ALWAYS_REFRESH_SOURCE_NAMES)
+    assert len(generic_sources) == min(settings.catalog_sources_per_run, generic_pool_size) + len(
         ALWAYS_REFRESH_SOURCE_NAMES
     )
     assert ALWAYS_REFRESH_SOURCE_NAMES <= generic_names

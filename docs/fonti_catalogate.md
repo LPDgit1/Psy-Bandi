@@ -1,8 +1,44 @@
 # Fonti catalogate e usate
 
-Totale fonti: 283
+Totale fonti: 310
 
 Nota: la fonte demo e ritirata non e inclusa. Le fonti private/sociali catalogate sono fonti potenziali e richiedono adapter dedicato prima di import automatici estesi.
+
+## Fonti istituzionali aggiunte
+
+Le nuove fonti istituzionali sono interrogate dall'adapter dedicato delle
+istituzioni pubbliche, con un filtro sui profili psicologici e un rimando alla
+scheda ufficiale:
+
+- Ministero della Salute;
+- Istituto Superiore di Sanita;
+- Consiglio Nazionale delle Ricerche;
+- Istituto Italiano di Tecnologia;
+- Dipartimento della Protezione Civile;
+- Ministero della Giustizia (senza il DAP);
+- Ministero per la Famiglia;
+- Ministero dell'Universita e della Ricerca, inclusi Concorsi e Avvisi e CONCORSIMUR;
+- i 18 Uffici Scolastici Regionali presenti nella directory ufficiale MIM.
+
+Dettaglio delle nuove schede:
+
+- Ministero della Salute - Bandi di concorso — <https://www.salute.gov.it/new/it/amministrazione-trasparente/bandi-di-concorso/>;
+- Istituto Superiore di Sanita - Bandi di concorso — <https://amministrazionetrasparente.iss.it/index.html%3Ftipologie%3Dbandi-di-concorso.html>;
+- CNR - Selezioni online — <https://selezionionline.cnr.it/jconon/>;
+- Istituto Italiano di Tecnologia - Openings — <https://www.iit.it/it-IT/openings>;
+- Dipartimento della Protezione Civile - Bandi di concorso — <https://www.protezionecivile.gov.it/it/dipartimento/amministrazione-trasparente/bandi-di-concorso/>;
+- Ministero della Giustizia - Concorsi, esami, selezioni e assunzioni — <https://www.giustizia.it/giustizia/page/it/concorsi_esami_selezioni_assunzioni?all=true&viewcat=csce_tipologia1>;
+- Ministero per la Famiglia - Avvisi e opportunita — <https://www.famiglia.governo.it/it/>;
+- Ministero dell'Universita e della Ricerca - Concorsi e avvisi — <https://www.mur.gov.it/it/ministero/concorsi-e-avvisi>;
+- Ministero dell'Universita e della Ricerca - CONCORSIMUR — <https://concorsi.mur.gov.it/>;
+- Uffici Scolastici Regionali Abruzzo, Basilicata, Calabria, Campania, Emilia-Romagna,
+  Friuli-Venezia Giulia, Lazio, Liguria, Lombardia, Marche, Molise, Piemonte,
+  Puglia, Sardegna, Sicilia, Toscana, Umbria e Veneto — directory ufficiale MIM:
+  <https://www.mim.gov.it/link-uffici-scolastici-regionali1>.
+
+La rotazione delle fonti generiche e configurata a 200 fonti per esecuzione,
+mentre il controllo automatico e schedulato una sola volta al giorno in fascia
+notturna.
 
 ## Abruzzo
 - ASL Lanciano Vasto Chieti - ASL Lanciano Vasto Chieti - Avvisi e concorsi [target-health-html] - https://documentale.asl2abruzzo.it/L190/?idSezione=66

@@ -3,7 +3,7 @@ name: Aggiorna archivio bandi
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 5,17 * * *"
+    - cron: "17 1 * * *"
   push:
     branches:
       - main
@@ -43,8 +43,8 @@ jobs:
         env:
           PYTHONPATH: backend
           PYTHONUNBUFFERED: "1"
-          CATALOG_SOURCES_PER_RUN: "100"
-          CATALOG_ADAPTER_BUDGET_SECONDS: "360"
+          CATALOG_SOURCES_PER_RUN: "200"
+          CATALOG_ADAPTER_BUDGET_SECONDS: "900"
           TARGET_HEALTH_SOURCES_PER_RUN: "42"
           TARGET_HEALTH_BUDGET_SECONDS: "360"
           DEEP_ADAPTER_SOURCES_PER_RUN: "13"
