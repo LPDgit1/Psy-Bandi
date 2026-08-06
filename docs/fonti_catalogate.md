@@ -47,6 +47,16 @@ bandi e concorsi. Sono state aggiunte 9 fonti regionali mancanti (Calabria,
 Campania, Basilicata, Lazio, Molise, Friuli-Venezia Giulia, Trentino-Alto Adige
 Umbria e Valle d'Aosta), portando la copertura regionale a 20/20.
 
+Landing regionali aggiunte: Calabria (<https://www.regione.calabria.it/concorsi-e-selezioni/>),
+Campania (<https://www.territorio.regione.campania.it/portale-bandi-e-avvisi>),
+Basilicata (<https://portalebandi.regione.basilicata.it/>), Lazio
+(<https://www.regione.lazio.it/bandi-di-concorso-avvisi>), Molise
+(<https://www.regione.molise.it/flex/cm/pages/ServeBLOB.php/L/IT/IDPagina/10675>),
+Friuli-Venezia Giulia (<https://www.regione.fvg.it/rafvg/concorsi/concorsiint.act>),
+Trentino-Alto Adige (<https://www.regione.taa.it/>), Umbria
+(<https://www.regione.umbria.it/amministrazione-trasparente/bandi-di-concorso>) e
+Valle d'Aosta (<https://www.regione.vda.it/amministrazione/concorsi/default_i.asp>).
+
 Sono inoltre presenti i 46 portali comunali mancanti tra capoluoghi provinciali
 e hub territoriali: Arezzo, Ascoli Piceno, Carbonia, Cesena, Cosenza, Crotone,
 Fermo, Ferrara, Forlì, Gorizia, Grosseto, Iglesias, Imperia, Isernia, La Spezia,
