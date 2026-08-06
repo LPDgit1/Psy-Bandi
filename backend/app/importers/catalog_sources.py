@@ -29,6 +29,7 @@ from app.importers.institutional import (
 from app.ministerial_catalog import MINISTERIAL_SOURCE_DEFINITIONS
 from app.models import ImportRun, Opportunity, Source
 from app.public_institution_catalog import PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
+from app.regional_municipal_catalog import REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS
 from app.services.classifier import build_search_text, classify_text, normalize_text
 from app.services.dates import infer_status, parse_date
 from app.services.dedupe import content_hash
@@ -83,6 +84,7 @@ SPECIFIC_ADAPTER_SOURCE_NAMES = {
         if definition["source_type"] == "ministerial-html-hub"
     ),
     *(definition["name"] for definition in PUBLIC_INSTITUTION_SOURCE_DEFINITIONS),
+    *(definition["name"] for definition in REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS),
 }
 
 ALWAYS_REFRESH_SOURCE_NAMES = {
@@ -109,6 +111,7 @@ CATALOG_SOURCE_TYPES = {
     "xml-index",
     "ministerial-html-hub",
     "public-institution-html",
+    "regional-municipal-html",
     "aslbi-csv",
 }
 

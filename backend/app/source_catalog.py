@@ -8,6 +8,7 @@ from app.national_health_catalog import NATIONAL_HEALTH_SOURCE_DEFINITIONS
 from app.northern_health_catalog import NORTHERN_HEALTH_SOURCE_DEFINITIONS
 from app.puglia_aol_catalog import PUGLIA_AOL_SOURCE_DEFINITIONS
 from app.public_institution_catalog import PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
+from app.regional_municipal_catalog import REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
 
 PUBLIC_SOURCE_NOTE = (
@@ -1400,4 +1401,7 @@ VERIFIED_SOURCE_CATALOG.extend(
 )
 VERIFIED_SOURCE_CATALOG.extend(
     _source(**definition) for definition in PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
+)
+VERIFIED_SOURCE_CATALOG.extend(
+    _source(**definition) for definition in REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS
 )

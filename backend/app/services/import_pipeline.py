@@ -27,6 +27,7 @@ from app.importers.myportal_veneto import run_myportal_treviso_import
 from app.importers.ministerial_sources import run_ministerial_sources_import
 from app.importers.public_institutions import run_public_institution_sources_import
 from app.importers.puglia_aol import run_puglia_aol_import
+from app.importers.regional_municipal import run_regional_municipal_sources_import
 from app.importers.target_health_html import run_target_health_html_import
 from app.importers.usl_umbria1 import run_usl_umbria1_import
 from app.importers.usl_umbria2 import run_usl_umbria2_import
@@ -52,6 +53,7 @@ INSTITUTIONAL_IMPORTERS: list[tuple[str, Importer]] = [
         "Salute, ricerca, giustizia, MUR, famiglia e USR",
         run_public_institution_sources_import,
     ),
+    ("Regioni e capoluoghi provinciali", run_regional_municipal_sources_import),
 ]
 
 PUBLIC_REFRESH_IMPORTERS: list[tuple[str, Importer]] = [

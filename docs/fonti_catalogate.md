@@ -1,6 +1,6 @@
 # Fonti catalogate e usate
 
-Totale fonti: 310
+Totale fonti: 365
 
 Nota: la fonte demo e ritirata non e inclusa. Le fonti private/sociali catalogate sono fonti potenziali e richiedono adapter dedicato prima di import automatici estesi.
 
@@ -39,6 +39,29 @@ Dettaglio delle nuove schede:
 La rotazione delle fonti generiche e configurata a 200 fonti per esecuzione,
 mentre il controllo automatico e schedulato una sola volta al giorno in fascia
 notturna.
+
+## Regioni e Comuni capoluogo aggiunti
+
+Il catalogo include ora tutte le 20 Regioni e i relativi portali ufficiali di
+bandi e concorsi. Sono state aggiunte 9 fonti regionali mancanti (Calabria,
+Campania, Basilicata, Lazio, Molise, Friuli-Venezia Giulia, Trentino-Alto Adige
+Umbria e Valle d'Aosta), portando la copertura regionale a 20/20.
+
+Sono inoltre presenti i 46 portali comunali mancanti tra capoluoghi provinciali
+e hub territoriali: Arezzo, Ascoli Piceno, Carbonia, Cesena, Cosenza, Crotone,
+Fermo, Ferrara, Forlì, Gorizia, Grosseto, Iglesias, Imperia, Isernia, La Spezia,
+Lanusei, Livorno, Lucca, Macerata, Massa, Modena, Nuoro, Olbia, Oristano, Parma,
+Pesaro, Piacenza, Pisa, Pistoia, Pordenone, Prato, Ravenna, Reggio Calabria,
+Reggio Emilia, Rimini, Sanluri, Sassari, Savona, Siena, Tempio Pausania, Terni,
+Tortolì, Udine, Urbino, Vibo Valentia e Villacidro.
+
+Le fonti regionali e comunali usano un adapter dedicato che segue le schede
+ufficiali sullo stesso dominio, filtra i profili psicologici e conserva il link
+alla pubblicazione originale. Per la riorganizzazione territoriale della
+Sardegna del 2026, i Comuni ex-capoluogo o indicati come hub (ad esempio
+Iglesias, Lanusei, Olbia, Sanluri, Tempio Pausania, Tortolì e Villacidro) restano
+monitorati finché le nuove circoscrizioni non completano l'individuazione dei
+capoluoghi formali.
 
 ## Abruzzo
 - ASL Lanciano Vasto Chieti - ASL Lanciano Vasto Chieti - Avvisi e concorsi [target-health-html] - https://documentale.asl2abruzzo.it/L190/?idSezione=66

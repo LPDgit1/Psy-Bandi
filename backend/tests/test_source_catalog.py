@@ -32,6 +32,7 @@ from app.importers.inps import INPS_SOURCE_NAME
 from app.importers.myportal_veneto import TREVISO
 from app.importers.ministerial_sources import MINISTERIAL_SOURCE_NAMES
 from app.importers.public_institutions import PUBLIC_INSTITUTION_SOURCE_NAMES
+from app.importers.regional_municipal import REGIONAL_MUNICIPAL_SOURCE_NAMES
 from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES, _sources
 from app.importers.usl_umbria1 import USL_UMBRIA1_SOURCE_NAME
 from app.importers.usl_umbria2 import USL_UMBRIA2_SOURCE_NAME
@@ -56,6 +57,11 @@ from app.services.source_probe import (
 from app.source_catalog import VERIFIED_SOURCE_CATALOG
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
 from app.public_institution_catalog import PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
+from app.regional_municipal_catalog import (
+    MUNICIPAL_CAPITAL_SOURCE_DEFINITIONS,
+    REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS,
+    REGIONAL_SOURCE_DEFINITIONS,
+)
 
 
 def test_catalog_includes_all_veneto_provincial_capitals() -> None:
@@ -181,6 +187,7 @@ def test_specific_adapter_registry_matches_implemented_connectors() -> None:
         *AST_MARCHE_SOURCE_NAMES,
         *TARGET_HEALTH_SOURCE_NAMES,
         *PUBLIC_INSTITUTION_SOURCE_NAMES,
+        *REGIONAL_MUNICIPAL_SOURCE_NAMES,
     }
 
     assert SPECIFIC_ADAPTER_SOURCE_NAMES == implemented_connector_sources
@@ -210,6 +217,7 @@ def test_every_adapter_family_is_scheduled_for_public_refresh() -> None:
         "run_asl_bi_import",
         "run_ministerial_sources_import",
         "run_public_institution_sources_import",
+        "run_regional_municipal_sources_import",
         "run_myportal_treviso_import",
         "run_puglia_aol_import",
         "run_target_health_html_import",
@@ -619,6 +627,91 @@ def test_catalog_includes_verified_regional_and_capital_sources() -> None:
         "Comune di Cagliari",
         "ATS Sardegna",
     } <= organizations
+
+
+def test_catalog_covers_every_region_with_a_regional_source() -> None:
+    regional_source_regions = {
+        source["region"]
+        for source in VERIFIED_SOURCE_CATALOG
+        if (source["organization"] or "").startswith("Regione")
+    }
+
+    assert regional_source_regions == {
+        "Abruzzo",
+        "Basilicata",
+        "Calabria",
+        "Campania",
+        "Emilia-Romagna",
+        "Friuli-Venezia Giulia",
+        "Lazio",
+        "Liguria",
+        "Lombardia",
+        "Marche",
+        "Molise",
+        "Piemonte",
+        "Puglia",
+        "Sardegna",
+        "Sicilia",
+        "Toscana",
+        "Trentino-Alto Adige",
+        "Umbria",
+        "Valle d'Aosta",
+        "Veneto",
+    }
+
+
+def test_catalog_adds_all_missing_provincial_capital_and_territorial_sources() -> None:
+    organizations = {source["organization"] for source in VERIFIED_SOURCE_CATALOG}
+    added_organizations = {
+        source["organization"] for source in MUNICIPAL_CAPITAL_SOURCE_DEFINITIONS
+    }
+
+    assert len(MUNICIPAL_CAPITAL_SOURCE_DEFINITIONS) == 46
+    assert all(
+        source["source_type"] == "regional-municipal-html"
+        and source["base_url"].startswith("https://")
+        for source in [*REGIONAL_SOURCE_DEFINITIONS, *MUNICIPAL_CAPITAL_SOURCE_DEFINITIONS]
+    )
+    assert added_organizations <= organizations
+    assert {
+        "Comune di Arezzo",
+        "Comune di Ascoli Piceno",
+        "Comune di Carbonia",
+        "Comune di Cosenza",
+        "Comune di Crotone",
+        "Comune di Fermo",
+        "Comune di Ferrara",
+        "Comune di Forlì",
+        "Comune di Gorizia",
+        "Comune di Grosseto",
+        "Comune di Imperia",
+        "Comune di Isernia",
+        "Comune di La Spezia",
+        "Comune di Livorno",
+        "Comune di Lucca",
+        "Comune di Macerata",
+        "Comune di Massa",
+        "Comune di Modena",
+        "Comune di Nuoro",
+        "Comune di Oristano",
+        "Comune di Parma",
+        "Comune di Pesaro",
+        "Comune di Piacenza",
+        "Comune di Pisa",
+        "Comune di Pistoia",
+        "Comune di Pordenone",
+        "Comune di Prato",
+        "Comune di Ravenna",
+        "Comune di Reggio Calabria",
+        "Comune di Reggio Emilia",
+        "Comune di Rimini",
+        "Comune di Sassari",
+        "Comune di Savona",
+        "Comune di Siena",
+        "Comune di Terni",
+        "Comune di Udine",
+        "Comune di Vibo Valentia",
+    } <= added_organizations
 
 
 def test_catalog_includes_requested_provincial_capitals() -> None:
