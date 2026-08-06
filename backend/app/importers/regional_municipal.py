@@ -107,7 +107,12 @@ def run_regional_municipal_sources_import(db: Session) -> ImportResult:
                     ):
                         if time.monotonic() > import_deadline:
                             break
-                        detail_html = _fetch_text(client, detail_url)
+                        try:
+                            detail_html = _fetch_text(client, detail_url)
+                        except Exception:
+                            skipped += 1
+                            attempt.skipped()
+                            continue
                         if detail_html is None:
                             skipped += 1
                             attempt.skipped()
@@ -167,4 +172,3 @@ def run_regional_municipal_sources_import(db: Session) -> ImportResult:
         updated_count=updated,
         skipped_count=skipped,
     )
-
