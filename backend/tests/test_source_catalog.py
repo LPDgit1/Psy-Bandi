@@ -7,6 +7,12 @@ from sqlalchemy.orm import Session
 from app.central_health_catalog import CENTRAL_HEALTH_SOURCE_DEFINITIONS
 from app.core.config import settings
 from app.hospital_health_catalog import HOSPITAL_HEALTH_SOURCE_DEFINITIONS
+from app.hospital_expansion_catalog import (
+    HOSPITAL_EXPANSION_SOURCE_DEFINITIONS,
+    LOMBARDY_ASST_SOURCE_DEFINITIONS,
+    PUBLIC_AO_AOU_SOURCE_DEFINITIONS,
+    STRATEGIC_IRCCS_SOURCE_DEFINITIONS,
+)
 from app.importers.arcs_fvg import ARCS_FVG_SOURCE_NAME
 from app.importers.asdaa_alto_adige import ASDAA_SOURCE_NAME
 from app.importers.asl_bi import ASL_BI_SOURCE_NAME
@@ -26,6 +32,7 @@ from app.importers.catalog_sources import (
 )
 from app.importers.comune_venezia import COMUNE_VENEZIA_SOURCE_NAME
 from app.importers.deep_html_sources import _sources_for_deep_import
+from app.importers.gazzetta_concorsi import GAZZETTA_SOURCE_NAME
 from app.importers.inail import INAIL_SOURCE_NAME
 from app.importers.inpa import INPA_SOURCE_NAME
 from app.importers.inps import INPS_SOURCE_NAME
@@ -177,6 +184,7 @@ def test_specific_adapter_registry_matches_implemented_connectors() -> None:
         INAIL_SOURCE_NAME,
         INPA_SOURCE_NAME,
         INPS_SOURCE_NAME,
+        GAZZETTA_SOURCE_NAME,
         ASL_BI_SOURCE_NAME,
         *MINISTERIAL_SOURCE_NAMES,
         TREVISO.source_name,
@@ -213,6 +221,7 @@ def test_every_adapter_family_is_scheduled_for_public_refresh() -> None:
         "run_deep_html_sources_import",
         "run_inail_import",
         "run_inps_import",
+        "run_gazzetta_concorsi_import",
         "run_asl_bi_import",
         "run_ministerial_sources_import",
         "run_public_institution_sources_import",
@@ -543,6 +552,55 @@ def test_catalog_includes_hospital_health_sources_for_adapter_review() -> None:
     assert all(
         "pending-adapter" in source["import_method"]
         for source in HOSPITAL_HEALTH_SOURCE_DEFINITIONS
+    )
+
+
+def test_catalog_adds_complete_current_lombardy_asst_layer() -> None:
+    organizations = {
+        source["organization"] for source in LOMBARDY_ASST_SOURCE_DEFINITIONS
+    }
+
+    assert len(LOMBARDY_ASST_SOURCE_DEFINITIONS) == 27
+    assert {
+        "ASST Grande Ospedale Metropolitano Niguarda",
+        "ASST Santi Paolo e Carlo",
+        "ASST Fatebenefratelli Sacco",
+        "ASST Gaetano Pini CTO",
+        "ASST Ovest Milanese",
+        "ASST Rhodense",
+        "ASST Nord Milano",
+        "ASST Melegnano e della Martesana",
+        "ASST di Lodi",
+        "ASST dei Sette Laghi",
+        "ASST della Valle Olona",
+        "ASST Lariana",
+        "ASST della Valtellina e dell'Alto Lario",
+        "ASST della Valcamonica",
+        "ASST di Lecco",
+        "ASST della Brianza",
+        "Fondazione IRCCS San Gerardo dei Tintori",
+        "ASST Papa Giovanni XXIII",
+        "ASST Bergamo Est",
+        "ASST Bergamo Ovest",
+        "ASST degli Spedali Civili di Brescia",
+        "ASST della Franciacorta",
+        "ASST del Garda",
+        "ASST di Cremona",
+        "ASST di Crema",
+        "ASST di Mantova",
+        "ASST di Pavia",
+    } == organizations
+
+
+def test_hospital_expansion_is_nightly_deep_adapter_compatible() -> None:
+    assert len(STRATEGIC_IRCCS_SOURCE_DEFINITIONS) == 12
+    assert len(PUBLIC_AO_AOU_SOURCE_DEFINITIONS) == 10
+    assert len(HOSPITAL_EXPANSION_SOURCE_DEFINITIONS) == 49
+    assert all(
+        source["source_type"] == "hospital-html-hub"
+        and source["import_method"] == "hospital-html-hub-deep"
+        and source["base_url"].startswith("https://")
+        for source in HOSPITAL_EXPANSION_SOURCE_DEFINITIONS
     )
 
 
@@ -970,6 +1028,7 @@ def test_collective_adapters_select_configured_rotation_batch_sizes() -> None:
         deep_sources = _sources_for_deep_import(db)
         generic_names = {source.name for source in generic_sources}
         target_names = {source.name for source in target_sources}
+        deep_names = {source.name for source in deep_sources}
 
     generic_pool_size = len(generic_sources) - len(ALWAYS_REFRESH_SOURCE_NAMES)
     assert settings.catalog_sources_per_run == 0
@@ -987,5 +1046,15 @@ def test_collective_adapters_select_configured_rotation_batch_sizes() -> None:
         "AULSS 8 Berica - Concorsi",
         "AULSS 9 Scaligera - Concorsi",
     } <= target_names
-    assert len(deep_sources) >= settings.deep_adapter_sources_per_run
+    assert settings.deep_adapter_sources_per_run == 0
+    assert settings.deep_adapter_budget_seconds == 0
+    assert {
+        "ASST Niguarda - Concorsi",
+        "ASST Pavia - Lavora con noi",
+        "IRCCS Carlo Besta - Concorsi",
+        "Fondazione Santa Lucia IRCCS - Lavora con noi",
+        "AOU Maggiore della Carita Novara - Concorsi e selezioni",
+        "IRCCS Bonino Pulejo - Concorsi",
+    } <= deep_names
+    assert len(deep_sources) >= len(HOSPITAL_EXPANSION_SOURCE_DEFINITIONS)
     assert not generic_names & SPECIFIC_ADAPTER_SOURCE_NAMES

@@ -206,13 +206,14 @@ restano visibili nel probe come `tls-review`.
   per concorsi, avvisi e bandi
 - Ministero degli Esteri: fonte ufficiale catalogata, ma non ancora refreshata
   automaticamente per protezione anti-bot osservata in verifica
-- Gazzetta Ufficiale e Regione Veneto: fonti pubbliche catalogate
+- Gazzetta Ufficiale - 4a Serie Speciale: adapter dedicato attivo su indice ed
+  edizioni, con codice redazionale, ente, scadenza e controllo strutturale
 - Universita del Nord Italia: rete iniziale di hub pubblici catalogati e verificabili
 - aziende sanitarie territoriali del Nord Italia: rete regionale catalogata con
   pagine ASL dirette e hub centralizzati compatibili con le policy pubbliche
-- aziende ospedaliere, AOU e IRCCS: 30 fonti pubbliche catalogate per adapter
-  dedicati o revisione tecnica, senza refresh automatico generico finche non si
-  conferma una struttura stabile
+- aziende ospedaliere, AOU, ASST e IRCCS: 79 fonti ospedaliere dirette
+  `hospital-html-hub`, incluse tutte le ASST lombarde correnti e una selezione
+  nazionale di IRCCS; gli adapter profondi tentano l'intero insieme ogni notte
 - aziende sanitarie territoriali di Marche e Umbria: ingressi ufficiali
   catalogati; AUSL Romagna e USL Umbria 2 sono gia automatizzate
 - capoluoghi di provincia del Veneto: Belluno, Padova, Rovigo, Treviso, Venezia, Verona e Vicenza

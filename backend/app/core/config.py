@@ -49,6 +49,7 @@ class Settings:
     inpa_max_pages: int = _int_env("INPA_MAX_PAGES", 10)
     inpa_open_scan_enabled: bool = _bool_env("INPA_OPEN_SCAN_ENABLED", True)
     inpa_open_scan_max_pages: int = _int_env("INPA_OPEN_SCAN_MAX_PAGES", 50)
+    gazzetta_concorsi_max_issues: int = _int_env("GAZZETTA_CONCORSI_MAX_ISSUES", 10)
     inps_search_terms: list[str] = None  # type: ignore[assignment]
     inps_page_size: int = _int_env("INPS_PAGE_SIZE", 25)
     inps_max_pages: int = _int_env("INPS_MAX_PAGES", 3)
@@ -77,7 +78,7 @@ class Settings:
         "DEEP_ADAPTER_MAX_LINKS_PER_SOURCE",
         24,
     )
-    deep_adapter_budget_seconds: int = _int_env("DEEP_ADAPTER_BUDGET_SECONDS", 900)
+    deep_adapter_budget_seconds: int = _int_env("DEEP_ADAPTER_BUDGET_SECONDS", 0)
     public_refresh_cooldown_seconds: int = _int_env("PUBLIC_REFRESH_COOLDOWN_SECONDS", 300)
     alert_scheduler_enabled: bool = _bool_env("ALERT_SCHEDULER_ENABLED", False)
     alert_scheduler_initial_delay_seconds: int = _int_env(

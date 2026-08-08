@@ -1,6 +1,11 @@
 # Fonti catalogate e usate
 
-Totale fonti: 365
+Totale fonti: 414
+
+Aggiornamento 8 agosto 2026: la Gazzetta Ufficiale - 4a Serie Speciale usa un
+adapter dedicato; sono state aggiunte 49 fonti dirette ASST, AO, AOU e IRCCS.
+L'elenco eseguibile autorevole e' in `backend/app/source_catalog.py` e
+`backend/app/hospital_expansion_catalog.py`.
 
 Nota: la fonte demo e ritirata non e inclusa. Le fonti private/sociali catalogate sono fonti potenziali e richiedono adapter dedicato prima di import automatici estesi.
 
@@ -208,7 +213,7 @@ capoluoghi formali.
 - Forum Nazionale Terzo Settore - Forum Terzo Settore - Bandi di interesse [third-sector-hub] - https://www.forumterzosettore.it/2023/10/11/bandi-di-interesse-per-il-terzo-settore/
 - INAIL - INAIL - Avvisi [html-archive] - https://www.inail.it/portale/it/inail-comunica/avvisi.html
 - INPS - INPS - Concorsi e mobilita [public-json-api] - https://www.inps.it/it/it/avvisi-bandi-e-fatturazione/fatturazione-concorsi.html
-- Istituto Poligrafico e Zecca dello Stato - Gazzetta Ufficiale - 4a Serie Speciale Concorsi ed Esami [html-pdf-index] - https://www.gazzettaufficiale.it/30giorni/concorsi
+- Istituto Poligrafico e Zecca dello Stato - Gazzetta Ufficiale - 4a Serie Speciale Concorsi ed Esami [gazzetta-concorsi-html] - https://www.gazzettaufficiale.it/30giorni/concorsi
 - Ministero dell'Interno - Ministero dell'Interno - Bandi di concorso [ministerial-html-hub] - https://www.interno.gov.it/it/amministrazione-trasparente/bandi-concorso
 - Polizia di Stato - Polizia di Stato - Concorsi [ministerial-html-hub] - https://www.poliziadistato.it/articolo/1129
 - Corpo Nazionale dei Vigili del Fuoco - Vigili del Fuoco - Concorsi pubblici [ministerial-html-hub] - https://www.vigilfuoco.it/servizi-ai-cittadini/concorsi-pubblici

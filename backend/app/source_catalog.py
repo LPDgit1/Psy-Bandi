@@ -3,6 +3,7 @@ from __future__ import annotations
 from app.aslbi_catalog import ASL_BI_SOURCE_DEFINITIONS
 from app.central_health_catalog import CENTRAL_HEALTH_SOURCE_DEFINITIONS
 from app.hospital_health_catalog import HOSPITAL_HEALTH_SOURCE_DEFINITIONS
+from app.hospital_expansion_catalog import HOSPITAL_EXPANSION_SOURCE_DEFINITIONS
 from app.ministerial_catalog import MINISTERIAL_SOURCE_DEFINITIONS
 from app.national_health_catalog import NATIONAL_HEALTH_SOURCE_DEFINITIONS
 from app.northern_health_catalog import NORTHERN_HEALTH_SOURCE_DEFINITIONS
@@ -48,14 +49,15 @@ def _source(
 VERIFIED_SOURCE_CATALOG = [
     _source(
         name="Gazzetta Ufficiale - 4a Serie Speciale Concorsi ed Esami",
-        source_type="html-pdf-index",
+        source_type="gazzetta-concorsi-html",
         base_url="https://www.gazzettaufficiale.it/30giorni/concorsi",
         region=None,
         organization="Istituto Poligrafico e Zecca dello Stato",
-        import_method="html-pdf-index-pending-adapter",
+        import_method="gazzetta-concorsi-index-detail",
         technical_notes=(
-            "Indice ufficiale degli ultimi 30 giorni. Fonte di controllo nazionale "
-            "e discovery, con estratti minimi e link alla pubblicazione."
+            "Adapter dedicato sull'indice ufficiale degli ultimi 30 giorni e sulle "
+            "singole edizioni. Estrae codice redazionale, ente, scadenza e link "
+            "all'atto; il controllo fallisce se la struttura non contiene atti."
         ),
     ),
     _source(
@@ -1392,6 +1394,9 @@ VERIFIED_SOURCE_CATALOG.extend(
 )
 VERIFIED_SOURCE_CATALOG.extend(
     _source(**definition) for definition in HOSPITAL_HEALTH_SOURCE_DEFINITIONS
+)
+VERIFIED_SOURCE_CATALOG.extend(
+    _source(**definition) for definition in HOSPITAL_EXPANSION_SOURCE_DEFINITIONS
 )
 VERIFIED_SOURCE_CATALOG.extend(
     _source(**definition) for definition in ASL_BI_SOURCE_DEFINITIONS

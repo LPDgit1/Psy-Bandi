@@ -1,6 +1,6 @@
 # Fonti sanitarie territoriali nazionali
 
-Verifica tecnica aggiornata al 10 luglio 2026. Il perimetro copre le aziende
+Verifica tecnica aggiornata all'8 agosto 2026. Il perimetro copre le aziende
 sanitarie territoriali o equivalenti regionali: ASL, AUSL, AULSS, ASP, ATS, AST,
 USL, ASReM, aziende sanitarie provinciali e hub regionali tipo Azienda Zero,
 ARES, ESTAR e ARCS.
@@ -9,7 +9,7 @@ ARES, ESTAR e ARCS.
 
 - Fonti sanitarie automatizzabili o refreshabili in catalogo: 117.
 - Fonti sanitarie documentate ma non automatizzate: 2.
-- Fonti ospedaliere, AOU e IRCCS catalogate per adapter/revisione: 30.
+- Fonti ospedaliere dirette `hospital-html-hub`: 79.
 - Test automatici di copertura nazionale: attivi in `test_source_catalog.py`.
 - Adapter profondi gia attivi: inPA, Azienda Zero Veneto, Azienda Zero Piemonte,
   ARCS FVG, ASUIT Trentino, ASDAA Alto Adige, AUSL Romagna, USL Umbria 1,
@@ -23,7 +23,7 @@ ARES, ESTAR e ARCS.
 | Valle d'Aosta | Azienda USL Valle d'Aosta |
 | Piemonte | Azienda Zero Piemonte; ASL AL, AT, BI, CN1, CN2, Citta di Torino, NO, TO3, TO4, TO5, VC, VCO |
 | Liguria | ATS Liguria, equivalente regionale dal 2026 |
-| Lombardia | ATS Bergamo, Brescia, Brianza, Insubria, Milano, Montagna, Pavia, Val Padana; hub Regione Lombardia |
+| Lombardia | ATS Bergamo, Brescia, Brianza, Insubria, Milano, Montagna, Pavia, Val Padana; tutte le 26 ASST correnti; Fondazione IRCCS San Gerardo; hub Regione Lombardia |
 | Trentino-Alto Adige | ASUIT Trentino; Azienda Sanitaria dell'Alto Adige |
 | Veneto | Azienda Zero Veneto; AULSS 1-9 |
 | Friuli-Venezia Giulia | ARCS FVG, hub operativo per ASUFC, ASUGI e ASFO |
@@ -64,16 +64,18 @@ ora anche `AULSS`, `ASP`, `ASReM`, `ARES`, `AREUS`, `ESTAR`, `ARCS`, `ASDAA`,
 
 ## Estensione ospedaliera, AOU e IRCCS
 
-Il catalogo include anche un primo blocco nazionale di aziende ospedaliere,
-aziende ospedaliero-universitarie e IRCCS, tra cui AO Alessandria, Gaslini,
+Il catalogo include un blocco nazionale di aziende ospedaliere,
+aziende ospedaliero-universitarie, ASST e IRCCS, tra cui AO Alessandria, Gaslini,
 San Martino, AO Padova, AOUI Verona, IOV, Burlo, CRO Aviano, Careggi, Meyer,
 AOUP Pisa, AOU Siena, AOU Perugia, AO Terni, AOU Marche, INRCA, San Camillo,
 IFO, AORN Moscati, AOU Federico II, AOR San Carlo, AO Cosenza, AOU Dulbecco,
 GOM Reggio Calabria, Cannizzaro, ARNAS Garibaldi, Papardo, Brotzu, AOU Cagliari
-e AOU Sassari.
+e AOU Sassari. L'estensione dell'agosto 2026 aggiunge tutte le ASST lombarde
+correnti, San Gerardo, dodici IRCCS diretti ad alta rilevanza psicologica e
+neuroscientifica e dieci ulteriori AO/AOU/IRCCS pubblici.
 
-Queste fonti sono intenzionalmente classificate come `hospital-html-hub` con
-`pending-adapter`: sono pubbliche e catalogate, ma non entrano nel refresh
-generico finche non viene verificata una struttura stabile per ciascun sito e
-non viene definita la deduplicazione con hub regionali come ESTAR, Azienda Zero
-o ARES.
+Queste fonti sono classificate come `hospital-html-hub` e vengono interrogate
+dall'adapter profondo. Il job notturno usa `DEEP_ADAPTER_SOURCES_PER_RUN=0` e
+`DEEP_ADAPTER_BUDGET_SECONDS=0`: tenta quindi l'intero insieme, mantenendo la
+deduplicazione con Gazzetta, inPA e hub regionali come ESTAR, Azienda Zero o
+ARES. Un errore di una singola azienda resta isolato e registrato in telemetria.

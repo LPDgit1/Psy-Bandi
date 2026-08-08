@@ -47,6 +47,7 @@ AUTO_HIDE_SAME_URL_NOTE = (
 
 SPECIFIC_ADAPTER_SOURCE_NAMES = {
     "inPA - Portale del Reclutamento",
+    "Gazzetta Ufficiale - 4a Serie Speciale Concorsi ed Esami",
     "Azienda Zero Veneto - Concorsi",
     "Azienda Zero Piemonte - Concorsi pubblici",
     "ARCS FVG - Concorsi avvisi incarichi",
@@ -87,9 +88,7 @@ SPECIFIC_ADAPTER_SOURCE_NAMES = {
     *(definition["name"] for definition in REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS),
 }
 
-ALWAYS_REFRESH_SOURCE_NAMES = {
-    "Gazzetta Ufficiale - 4a Serie Speciale Concorsi ed Esami",
-}
+ALWAYS_REFRESH_SOURCE_NAMES: set[str] = set()
 
 CATALOG_SOURCE_TYPES = {
     "external-transparency",

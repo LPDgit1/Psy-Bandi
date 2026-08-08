@@ -20,6 +20,7 @@ from app.importers.base import ImportResult
 from app.importers.catalog_sources import run_catalog_sources_import
 from app.importers.comune_venezia import run_comune_venezia_import
 from app.importers.deep_html_sources import run_deep_html_sources_import
+from app.importers.gazzetta_concorsi import run_gazzetta_concorsi_import
 from app.importers.inail import run_inail_import
 from app.importers.inpa import run_inpa_import
 from app.importers.inps import run_inps_import
@@ -35,6 +36,7 @@ from app.importers.usl_umbria2 import run_usl_umbria2_import
 Importer = Callable[[Session], ImportResult]
 
 INSTITUTIONAL_IMPORTERS: list[tuple[str, Importer]] = [
+    ("Gazzetta Ufficiale - Concorsi ed Esami", run_gazzetta_concorsi_import),
     ("Azienda Zero Veneto", run_azienda_zero_import),
     ("Azienda Zero Piemonte", run_azienda_zero_piemonte_import),
     ("ARCS FVG", run_arcs_fvg_import),
