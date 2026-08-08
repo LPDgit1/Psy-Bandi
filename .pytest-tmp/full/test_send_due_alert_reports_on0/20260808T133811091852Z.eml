@@ -1,0 +1,20 @@
+From: Bandi Psicologia <noreply@example.test>
+To: due@example.test
+Subject: Alert bandi psicologi: 1 risultato/i
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Report aggiornato Ricerca Bandi Psicologi
+
+Risultati trovati: 1
+
+1. Bando psicoterapeuta minori
+   Ente: ASL Test
+   Regione: Lazio
+   Scadenza: da verificare
+   Fonte: https://example.test/bando-psicoterapeuta-minori
+
+Gestione alert:
+http://localhost:8000/api/public/alerts/unsubscribe?token=3D3e7382bb47a749e69=
+e02f0f7667e027e

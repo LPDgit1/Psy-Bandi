@@ -1,0 +1,20 @@
+From: Bandi Psicologia <noreply@example.test>
+To: utente@example.test
+Subject: Alert bandi psicologi: 1 risultato/i
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Report aggiornato Ricerca Bandi Psicologi
+
+Risultati trovati: 1
+
+1. Incarico psicoterapeuta per servizio minori
+   Ente: ASL Test
+   Regione: Lazio
+   Scadenza: 18/08/2026
+   Fonte: https://example.test/incarico-psicoterapeuta-per-servizio-minori
+
+Gestione alert:
+http://localhost:8000/api/public/alerts/unsubscribe?token=3Dd4423d7e02694576b=
+800d203ae8b40ac

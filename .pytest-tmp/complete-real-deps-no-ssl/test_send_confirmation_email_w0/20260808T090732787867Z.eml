@@ -1,0 +1,24 @@
+From: Bandi Psicologia <noreply@example.test>
+To: utente@example.test
+Subject: Conferma alert Ricerca Bandi Psicologi
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hai richiesto un alert per Ricerca Bandi Psicologi.
+
+Per attivarlo conferma l'iscrizione aprendo questo link:
+http://localhost:8000/api/public/alerts/confirm?token=3D41453194954441dd9024d=
+9cb1273f825
+
+Filtri salvati:
+- Regioni: Lazio
+- Tipologie: avviso-pubblico
+- Ambiti: psicoterapia
+- Parole chiave: minori
+- Frequenza: weekly
+
+Se non hai richiesto tu questo alert, puoi ignorare questa email oppure disis=
+criverti:
+http://localhost:8000/api/public/alerts/unsubscribe?token=3D41453194954441dd9=
+024d9cb1273f825
