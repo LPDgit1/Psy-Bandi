@@ -117,7 +117,7 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "AOU Perugia - Concorsi",
         "source_type": "hospital-html-hub",
-        "base_url": "https://www.ospedale.perugia.it/pagine/concorsi",
+        "base_url": "https://www.ospedale.perugia.it/pagine/bandi-di-concorso",
         "region": "Umbria",
         "organization": "Azienda Ospedaliera di Perugia",
         "import_method": "hospital-html-hub-pending-adapter",
@@ -201,7 +201,7 @@ HOSPITAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "AO Cosenza - Bandi di concorso",
         "source_type": "hospital-html-hub",
-        "base_url": "https://aocosenza.it/bandi/concorsi/",
+        "base_url": "https://www.aocosenza.it/bandi/concorsi/",
         "region": "Calabria",
         "organization": "Azienda Ospedaliera di Cosenza",
         "import_method": "hospital-html-hub-pending-adapter",

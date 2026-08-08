@@ -239,7 +239,11 @@ def run_deep_html_sources_import(db: Session) -> ImportResult:
     skipped = 0
 
     try:
-        import_deadline = time.monotonic() + settings.deep_adapter_budget_seconds
+        import_deadline = (
+            time.monotonic() + settings.deep_adapter_budget_seconds
+            if settings.deep_adapter_budget_seconds > 0
+            else None
+        )
         with httpx.Client(
             timeout=httpx.Timeout(8, connect=4),
             verify=settings.source_import_verify_tls,
@@ -247,9 +251,6 @@ def run_deep_html_sources_import(db: Session) -> ImportResult:
             headers={"User-Agent": "BandiPsicologiaMVP/0.1 (+adapter profondi)"},
         ) as client:
             for source in _sources_for_deep_import(db):
-                if time.monotonic() > import_deadline:
-                    skipped += 1
-                    continue
                 attempt = start_source_attempt(db, source)
                 try:
                     html = _fetch_text(client, source.base_url)
@@ -273,7 +274,10 @@ def run_deep_html_sources_import(db: Session) -> ImportResult:
                         pages_to_visit
                         and visited_pages < settings.deep_adapter_max_links_per_source
                     ):
-                        if time.monotonic() > import_deadline:
+                        if (
+                            import_deadline is not None
+                            and time.monotonic() > import_deadline
+                        ):
                             break
                         url, depth = pages_to_visit.pop(0)
                         if url in seen_urls:

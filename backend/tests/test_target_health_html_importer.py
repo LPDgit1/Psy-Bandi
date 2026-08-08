@@ -1,5 +1,7 @@
 from app.importers.target_health_html import (
     collect_target_health_detail_urls,
+    collect_veneto_aulss_filter_urls,
+    parse_aulss4_api_records,
     parse_target_health_detail,
     parse_target_health_records,
 )
@@ -37,6 +39,142 @@ def test_parse_target_health_records_extracts_psychology_card() -> None:
     assert records[0].official_url == "https://example.test/avviso-psicologo"
     assert records[0].deadline is not None
     assert records[0].deadline.month == 9
+
+
+def test_parse_target_health_records_extracts_current_aulss6_listing() -> None:
+    source = Source(
+        id="src_aulss6",
+        name="AULSS 6 Euganea - Concorsi",
+        source_type="target-health-html",
+        base_url="https://www.aulss6.veneto.it/bandi-di-concorso",
+        organization="AULSS 6 Euganea",
+        region="Veneto",
+    )
+    html = """
+    <article class="it-card rounded shadow-sm border">
+      <h3 class="it-card-title" id="concorso-titolo-2776">
+        <a href="?id=2776" class="d-block">
+          Bando ID n°99163 - Avviso di procedura comparativa per il conferimento
+          di n. 7 incarichi libero professionali in qualità di Psicologo
+          Psicoterapeuta per i Centri Psicologia Scolastica.
+        </a>
+      </h3>
+      <div class="it-card-body">
+        <b>Data inizio:</b> 04/08/2026 00:01
+        <b>Data scadenza:</b> 14/08/2026 23:59
+      </div>
+    </article>
+    """
+
+    records = parse_target_health_records(source, html, source.base_url)
+
+    assert len(records) == 1
+    assert records[0].official_url == (
+        "https://www.aulss6.veneto.it/bandi-di-concorso?id=2776"
+    )
+    assert records[0].deadline is not None
+    assert records[0].deadline.date().isoformat() == "2026-08-14"
+    assert records[0].published_at is not None
+    assert records[0].published_at.date().isoformat() == "2026-08-04"
+
+
+def test_collect_veneto_aulss_filter_urls_discovers_roles_and_pages() -> None:
+    form_html = """
+    <form>
+      <input name="titolo" value="">
+      <select name="stato">
+        <option value="">Qualsiasi</option>
+        <option value="1">Aperto</option>
+        <option value="0">Scaduti</option>
+      </select>
+      <select name="figura">
+        <option value="">Qualsiasi</option>
+        <option value="89">PSICOLOGO</option>
+        <option value="90">MEDICO</option>
+      </select>
+      <select name="area">
+        <option value="46">PSICOLOGI</option>
+      </select>
+    </form>
+    """
+    base_url = "https://www.aulss1.veneto.it/concorsi-e-avvisi"
+
+    discovered = collect_veneto_aulss_filter_urls(form_html, base_url)
+
+    assert f"{base_url}?stato=1&titolo=psicolog" in discovered
+    assert f"{base_url}?stato=1&figura=89" in discovered
+    assert f"{base_url}?stato=1&area=46" in discovered
+    assert all("90" not in url for url in discovered)
+
+    filtered_html = '<a href="?figura=89&p=2">2</a>'
+    pages = collect_veneto_aulss_filter_urls(
+        filtered_html,
+        f"{base_url}?stato=1&figura=89",
+    )
+
+    assert any("figura=89" in url and "stato=1" in url and "p=2" in url for url in pages)
+
+
+def test_parse_aulss4_api_records_uses_canonical_url_dates_and_attachments() -> None:
+    source = Source(
+        id="src_aulss4",
+        name="AULSS 4 Veneto Orientale - Concorsi",
+        source_type="target-health-myportal-api",
+        base_url=(
+            "https://www.aulss4.veneto.it/amministrazionetrasparente/"
+            "_05_bandi_di_concorso"
+        ),
+        organization="AULSS 4 Veneto Orientale",
+        region="Veneto",
+    )
+    payload = {
+        "page": {
+            "entities": [
+                {
+                    "id": "entity-1",
+                    "firstPublishedAt": "2026-08-04T09:30:00.000Z",
+                    "attributes": {
+                        "sys_title": (
+                            "Avviso pubblico per due incarichi di Psicologo "
+                            "Psicoterapeuta"
+                        ),
+                        "sys_canonical_url": (
+                            "/amministrazionetrasparente-info/"
+                            "avviso-psicologi-psicoterapeuti"
+                        ),
+                        "def_date_scadenza_bando": "2026-08-20T21:59:00.000Z",
+                        "myp_noteinizio": "<p>Incarico libero professionale.</p>",
+                        "mul_association_allegati": [
+                            {
+                                "dyn_str_association_allegati_uuid": "attachment-1",
+                                "dyn_str_autobind_allegati_name": "Bando.pdf",
+                            }
+                        ],
+                    },
+                },
+                {
+                    "id": "entity-2",
+                    "attributes": {
+                        "sys_title": (
+                            "Graduatoria finale - avviso pubblico per Psicologo"
+                        ),
+                        "sys_canonical_url": (
+                            "/amministrazionetrasparente-info/graduatoria-psicologo"
+                        ),
+                    },
+                },
+            ]
+        }
+    }
+
+    records = parse_aulss4_api_records(source, payload)
+
+    assert len(records) == 1
+    assert records[0].published_at is not None
+    assert records[0].deadline is not None
+    assert records[0].deadline.date().isoformat() == "2026-08-20"
+    assert records[0].official_url.endswith("/avviso-psicologi-psicoterapeuti")
+    assert records[0].attachments[0]["url"].endswith("id=attachment-1")
 
 
 def test_parse_target_health_records_ignores_approval_and_final_ranking_page() -> None:

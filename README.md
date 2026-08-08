@@ -40,11 +40,12 @@ commit provoca automaticamente il redeploy di Streamlit Community Cloud.
 
 Le fonti con adapter specifici vengono controllate a ogni esecuzione, compresi
 inPA e Gazzetta Ufficiale. A ogni controllo notturno vengono inoltre interrogate
-le 42 fonti sanitarie mirate e tutti gli adapter profondi catalogati; il lotto deterministico
-comprende fino a 200 fonti generiche (la Gazzetta resta sempre inclusa). La configurazione
-garantisce la copertura teorica completa del catalogo generico entro le esecuzioni
-previste dalla rotazione,
-salvo timeout o indisponibilità dei siti remoti. Il riepilogo di ogni esecuzione
+tutte le fonti sanitarie mirate, comprese le nove AULSS venete, e tutti gli
+adapter profondi catalogati. L'intero catalogo delle fonti generiche viene
+controllato nello stesso aggiornamento giornaliero: non esiste piu un lotto a
+rotazione e non viene applicato un limite temporale globale all'adapter
+generico. Restano applicati timeout alla singola richiesta per evitare che una
+fonte indisponibile blocchi l'intero aggiornamento. Il riepilogo di ogni esecuzione
 Actions mostra sia il lotto pianificato sia le fonti effettivamente interrogate.
 
 Configurazione dell'app in <https://share.streamlit.io>:

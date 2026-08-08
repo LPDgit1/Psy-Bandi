@@ -26,6 +26,7 @@ from app.importers.institutional import (
     professional_role_match,
     upsert_opportunity,
 )
+from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES
 from app.ministerial_catalog import MINISTERIAL_SOURCE_DEFINITIONS
 from app.models import ImportRun, Opportunity, Source
 from app.public_institution_catalog import PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
@@ -39,7 +40,6 @@ from app.services.source_probe import (
     source_rotation_batch,
 )
 from app.services.source_telemetry import start_source_attempt
-from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
 
 AUTO_HIDE_SAME_URL_NOTE = (
     "Escluso automaticamente: duplicato della stessa scheda ufficiale nella fonte."
@@ -77,7 +77,7 @@ SPECIFIC_ADAPTER_SOURCE_NAMES = {
     "AST Fermo - Concorsi",
     "AST Macerata - Concorsi",
     "AST Pesaro Urbino - Concorsi",
-    *(definition["name"] for definition in TARGET_HEALTH_SOURCE_DEFINITIONS),
+    *TARGET_HEALTH_SOURCE_NAMES,
     *(
         definition["name"]
         for definition in MINISTERIAL_SOURCE_DEFINITIONS
@@ -737,10 +737,15 @@ def _sources_for_generic_import(db: Session) -> list[Source]:
         key=lambda source: source.name.casefold(),
     )
     rotating = [source for source in sources if source.name not in ALWAYS_REFRESH_SOURCE_NAMES]
+    configured_batch_size = settings.catalog_sources_per_run
     selected = source_rotation_batch(
         rotating,
-        batch_size=settings.catalog_sources_per_run,
-        group_name="fonti generiche",
+        batch_size=(
+            len(rotating)
+            if configured_batch_size <= 0
+            else max(configured_batch_size, len(rotating))
+        ),
+        group_name="fonti generiche (tutte)",
     )
     return [*always_refresh, *selected]
 
@@ -760,12 +765,16 @@ def run_catalog_sources_import(db: Session) -> ImportResult:
             follow_redirects=True,
             headers={"User-Agent": "BandiPsicologiaMVP/0.1 (+fonti pubbliche)"},
         ) as client:
-            import_deadline = time.monotonic() + settings.catalog_adapter_budget_seconds
+            import_deadline = (
+                time.monotonic() + settings.catalog_adapter_budget_seconds
+                if settings.catalog_adapter_budget_seconds > 0
+                else None
+            )
             for source in _sources_for_generic_import(db):
                 if source.name in SPECIFIC_ADAPTER_SOURCE_NAMES or source.status in BLOCK_STATUSES:
                     skipped += 1
                     continue
-                if time.monotonic() > import_deadline:
+                if import_deadline is not None and time.monotonic() > import_deadline:
                     skipped += 1
                     continue
                 attempt = start_source_attempt(db, source)
@@ -785,7 +794,10 @@ def run_catalog_sources_import(db: Session) -> ImportResult:
                             }
                         )
                         for url in collect_catalog_links(html, source_url):
-                            if time.monotonic() > import_deadline:
+                            if (
+                                import_deadline is not None
+                                and time.monotonic() > import_deadline
+                            ):
                                 break
                             try:
                                 detail_html = _fetch_text(client, url)

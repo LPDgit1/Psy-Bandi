@@ -83,7 +83,10 @@ CENTRAL_HEALTH_SOURCE_DEFINITIONS = [
     {
         "name": "USL Umbria 2 - Bandi di concorso",
         "source_type": "html-table",
-        "base_url": "https://www.uslumbria2.it/pagine/concorsi-001",
+        "base_url": (
+            "https://www.uslumbria2.it/amministrazione-trasparente/"
+            "bandi-di-concorso"
+        ),
         "region": "Umbria",
         "organization": "USL Umbria 2",
         "import_method": "html-table-sections",

@@ -43,11 +43,12 @@ jobs:
         env:
           PYTHONPATH: backend
           PYTHONUNBUFFERED: "1"
-          CATALOG_SOURCES_PER_RUN: "200"
-          CATALOG_ADAPTER_BUDGET_SECONDS: "900"
-          TARGET_HEALTH_SOURCES_PER_RUN: "42"
+          # Zero means: every generic source, without a global adapter cutoff.
+          CATALOG_SOURCES_PER_RUN: "0"
+          CATALOG_ADAPTER_BUDGET_SECONDS: "0"
+          TARGET_HEALTH_SOURCES_PER_RUN: "0"
           TARGET_HEALTH_BUDGET_SECONDS: "360"
-          DEEP_ADAPTER_SOURCES_PER_RUN: "13"
+          DEEP_ADAPTER_SOURCES_PER_RUN: "0"
           DEEP_ADAPTER_BUDGET_SECONDS: "900"
         run: |
           set -euo pipefail

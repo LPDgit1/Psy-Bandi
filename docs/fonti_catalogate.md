@@ -36,9 +36,10 @@ Dettaglio delle nuove schede:
   Puglia, Sardegna, Sicilia, Toscana, Umbria e Veneto — directory ufficiale MIM:
   <https://www.mim.gov.it/link-uffici-scolastici-regionali1>.
 
-La rotazione delle fonti generiche e configurata a 200 fonti per esecuzione,
+Tutte le fonti generiche sono verificate nella stessa esecuzione integrale,
 mentre il controllo automatico e schedulato una sola volta al giorno in fascia
-notturna.
+notturna. Le nove AULSS venete sono inoltre assegnate all'adapter sanitario
+mirato; AULSS 4 usa direttamente l'API pubblica myPortal.
 
 ## Regioni e Comuni capoluogo aggiunti
 

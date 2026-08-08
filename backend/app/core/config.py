@@ -56,21 +56,23 @@ class Settings:
     azienda_zero_piemonte_max_pages: int = _int_env("AZIENDA_ZERO_PIEMONTE_MAX_PAGES", 8)
     asuit_max_pages: int = _int_env("ASUIT_MAX_PAGES", 8)
     ausl_romagna_max_pages: int = _int_env("AUSL_ROMAGNA_MAX_PAGES", 4)
-    catalog_sources_per_run: int = _int_env("CATALOG_SOURCES_PER_RUN", 200)
+    # Zero means the whole generic catalog. The nightly job deliberately uses
+    # this mode so newly added sources cannot silently fall outside a rotation.
+    catalog_sources_per_run: int = _int_env("CATALOG_SOURCES_PER_RUN", 0)
     catalog_adapter_budget_seconds: int = _int_env(
         "CATALOG_ADAPTER_BUDGET_SECONDS",
-        900,
+        0,
     )
     catalog_max_detail_links_per_source: int = _int_env(
         "CATALOG_MAX_DETAIL_LINKS_PER_SOURCE",
         4,
     )
-    target_health_sources_per_run: int = _int_env("TARGET_HEALTH_SOURCES_PER_RUN", 42)
+    target_health_sources_per_run: int = _int_env("TARGET_HEALTH_SOURCES_PER_RUN", 0)
     target_health_budget_seconds: int = _int_env(
         "TARGET_HEALTH_BUDGET_SECONDS",
         360,
     )
-    deep_adapter_sources_per_run: int = _int_env("DEEP_ADAPTER_SOURCES_PER_RUN", 13)
+    deep_adapter_sources_per_run: int = _int_env("DEEP_ADAPTER_SOURCES_PER_RUN", 0)
     deep_adapter_max_links_per_source: int = _int_env(
         "DEEP_ADAPTER_MAX_LINKS_PER_SOURCE",
         24,

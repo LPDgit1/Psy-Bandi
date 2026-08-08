@@ -8,8 +8,8 @@ from app.central_health_catalog import CENTRAL_HEALTH_SOURCE_DEFINITIONS
 from app.core.config import settings
 from app.hospital_health_catalog import HOSPITAL_HEALTH_SOURCE_DEFINITIONS
 from app.importers.arcs_fvg import ARCS_FVG_SOURCE_NAME
-from app.importers.asl_bi import ASL_BI_SOURCE_NAME
 from app.importers.asdaa_alto_adige import ASDAA_SOURCE_NAME
+from app.importers.asl_bi import ASL_BI_SOURCE_NAME
 from app.importers.asl_piemonte import ASL_PIEMONTE_SOURCE_NAMES
 from app.importers.asl_roma2 import ASL_ROMA2_SOURCE_NAME
 from app.importers.ast_marche import AST_MARCHE_SOURCE_NAMES
@@ -29,8 +29,8 @@ from app.importers.deep_html_sources import _sources_for_deep_import
 from app.importers.inail import INAIL_SOURCE_NAME
 from app.importers.inpa import INPA_SOURCE_NAME
 from app.importers.inps import INPS_SOURCE_NAME
-from app.importers.myportal_veneto import TREVISO
 from app.importers.ministerial_sources import MINISTERIAL_SOURCE_NAMES
+from app.importers.myportal_veneto import TREVISO
 from app.importers.public_institutions import PUBLIC_INSTITUTION_SOURCE_NAMES
 from app.importers.regional_municipal import REGIONAL_MUNICIPAL_SOURCE_NAMES
 from app.importers.target_health_html import TARGET_HEALTH_SOURCE_NAMES, _sources
@@ -43,7 +43,12 @@ from app.national_health_catalog import (
     NON_AUTOMATED_HEALTH_SOURCE_DEFINITIONS,
 )
 from app.northern_health_catalog import NORTHERN_HEALTH_SOURCE_DEFINITIONS
+from app.public_institution_catalog import PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
 from app.puglia_aol_catalog import PUGLIA_AOL_SOURCE_DEFINITIONS
+from app.regional_municipal_catalog import (
+    MUNICIPAL_CAPITAL_SOURCE_DEFINITIONS,
+    REGIONAL_SOURCE_DEFINITIONS,
+)
 from app.scripts.audit_sources import adapter_family
 from app.services.import_pipeline import PUBLIC_REFRESH_IMPORTERS
 from app.services.source_probe import (
@@ -56,12 +61,6 @@ from app.services.source_probe import (
 )
 from app.source_catalog import VERIFIED_SOURCE_CATALOG
 from app.target_health_catalog import TARGET_HEALTH_SOURCE_DEFINITIONS
-from app.public_institution_catalog import PUBLIC_INSTITUTION_SOURCE_DEFINITIONS
-from app.regional_municipal_catalog import (
-    MUNICIPAL_CAPITAL_SOURCE_DEFINITIONS,
-    REGIONAL_MUNICIPAL_SOURCE_DEFINITIONS,
-    REGIONAL_SOURCE_DEFINITIONS,
-)
 
 
 def test_catalog_includes_all_veneto_provincial_capitals() -> None:
@@ -242,7 +241,14 @@ def test_catalog_uses_current_official_source_urls() -> None:
         "?Pag=tra_Isti_Concorsi_EspletatiX&mnu=78"
     )
     assert sources_by_name["AO Cosenza - Bandi di concorso"] == (
-        "https://aocosenza.it/bandi/concorsi/"
+        "https://www.aocosenza.it/bandi/concorsi/"
+    )
+    assert sources_by_name["AOU Perugia - Concorsi"] == (
+        "https://www.ospedale.perugia.it/pagine/bandi-di-concorso"
+    )
+    assert sources_by_name["USL Umbria 2 - Bandi di concorso"] == (
+        "https://www.uslumbria2.it/amministrazione-trasparente/"
+        "bandi-di-concorso"
     )
     assert sources_by_name["AOU Renato Dulbecco - Bandi di concorso"] == (
         "https://www.aourenatodulbecco.it/bandi-e-concorsi/"
@@ -261,6 +267,13 @@ def test_catalog_uses_current_official_source_urls() -> None:
     )
     assert sources_by_name["Comune di Viterbo - Bandi di concorso"] == (
         "https://comune.viterbo.it/argomento/concorsi/"
+    )
+    assert sources_by_name["AULSS 3 Serenissima - Concorsi e avvisi"] == (
+        "https://trasparenza.aulss3.veneto.it/trasparenza-bandi-concorso"
+    )
+    assert sources_by_name["AULSS 4 Veneto Orientale - Concorsi"] == (
+        "https://www.aulss4.veneto.it/amministrazionetrasparente/"
+        "_05_bandi_di_concorso"
     )
     assert sources_by_name["Comune di Barletta - Amministrazione Trasparente"] == (
         "https://trasparenza.comune.barletta.bt.it/"
@@ -495,7 +508,13 @@ def test_national_health_extension_has_importable_public_sources() -> None:
         for source in NATIONAL_HEALTH_SOURCE_DEFINITIONS
     )
     assert all(
-        source["source_type"] in {"html-list", "html-hub"}
+        source["source_type"]
+        in {
+            "html-list",
+            "html-hub",
+            "target-health-html",
+            "target-health-myportal-api",
+        }
         for source in NATIONAL_HEALTH_SOURCE_DEFINITIONS
     )
 
@@ -950,12 +969,23 @@ def test_collective_adapters_select_configured_rotation_batch_sizes() -> None:
         target_sources = _sources(db)
         deep_sources = _sources_for_deep_import(db)
         generic_names = {source.name for source in generic_sources}
+        target_names = {source.name for source in target_sources}
 
     generic_pool_size = len(generic_sources) - len(ALWAYS_REFRESH_SOURCE_NAMES)
-    assert len(generic_sources) == min(settings.catalog_sources_per_run, generic_pool_size) + len(
-        ALWAYS_REFRESH_SOURCE_NAMES
-    )
+    assert settings.catalog_sources_per_run == 0
+    assert len(generic_sources) == generic_pool_size + len(ALWAYS_REFRESH_SOURCE_NAMES)
     assert ALWAYS_REFRESH_SOURCE_NAMES <= generic_names
-    assert len(target_sources) == len(TARGET_HEALTH_SOURCE_DEFINITIONS)
+    assert len(target_sources) == len(TARGET_HEALTH_SOURCE_NAMES)
+    assert {
+        "AULSS 1 Dolomiti - Concorsi",
+        "AULSS 2 Marca Trevigiana - Concorsi",
+        "AULSS 3 Serenissima - Concorsi e avvisi",
+        "AULSS 4 Veneto Orientale - Concorsi",
+        "AULSS 5 Polesana - Concorsi",
+        "AULSS 6 Euganea - Concorsi",
+        "AULSS 7 Pedemontana - Concorsi",
+        "AULSS 8 Berica - Concorsi",
+        "AULSS 9 Scaligera - Concorsi",
+    } <= target_names
     assert len(deep_sources) >= settings.deep_adapter_sources_per_run
     assert not generic_names & SPECIFIC_ADAPTER_SOURCE_NAMES
