@@ -71,7 +71,7 @@ class Settings:
     target_health_sources_per_run: int = _int_env("TARGET_HEALTH_SOURCES_PER_RUN", 0)
     target_health_budget_seconds: int = _int_env(
         "TARGET_HEALTH_BUDGET_SECONDS",
-        360,
+        720,
     )
     deep_adapter_sources_per_run: int = _int_env("DEEP_ADAPTER_SOURCES_PER_RUN", 0)
     deep_adapter_max_links_per_source: int = _int_env(
