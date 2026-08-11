@@ -219,12 +219,9 @@ def refresh_deadline_statuses(db: Session, *, now: datetime | None = None) -> in
             )
             changed += 1
             continue
-        if status == "closed" and opportunity.editorial_status == "approved":
-            opportunity.editorial_status = "hidden"
-            opportunity.editorial_notes = _notes_with_auto_hide(
-                opportunity.editorial_notes
-            )
-            changed += 1
+        # Expired opportunities remain public as historical archive records.
+        # Public consumers exclude them by default using the temporal status,
+        # while keeping the official source available when users request the archive.
     changed += _hide_exact_url_duplicates(opportunities)
     if changed:
         db.commit()

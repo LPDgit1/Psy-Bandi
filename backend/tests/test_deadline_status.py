@@ -5,14 +5,13 @@ from sqlalchemy.orm import Session
 
 from app.models import Base, Opportunity, Source
 from app.services.deadline_status import (
-    AUTO_HIDE_EXPIRED_NOTE,
     AUTO_HIDE_NON_OPPORTUNITY_NOTE,
     AUTO_HIDE_UNDATED_REVIEW_NOTE,
     refresh_deadline_statuses,
 )
 
 
-def test_refresh_deadline_statuses_hides_expired_public_opportunity() -> None:
+def test_refresh_deadline_statuses_keeps_expired_public_opportunity_for_archive() -> None:
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(bind=engine)
 
@@ -36,10 +35,10 @@ def test_refresh_deadline_statuses_hides_expired_public_opportunity() -> None:
         )
 
         db.refresh(opportunity)
-        assert changed == 2
+        assert changed == 1
         assert opportunity.status == "closed"
-        assert opportunity.editorial_status == "hidden"
-        assert opportunity.editorial_notes == AUTO_HIDE_EXPIRED_NOTE
+        assert opportunity.editorial_status == "approved"
+        assert opportunity.editorial_notes is None
 
 
 def test_refresh_deadline_statuses_keeps_future_public_opportunity_visible() -> None:
