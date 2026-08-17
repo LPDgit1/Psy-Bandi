@@ -234,12 +234,3 @@ sono descritti in `docs/FONTI_PILOTA.md`. Le matrici sanitarie regionali e le
 eccezioni `robots.txt` sono riportate in `docs/FONTI_SANITARIE_NORD.md` e
 `docs/FONTI_SANITARIE_CENTRO.md`.
 
-## Credenziali admin locali
-
-Definire nel file `.env` locale, non versionato:
-
-- email: `<ADMIN_EMAIL>`
-- password: `<ADMIN_PASSWORD>`
-- token bearer: `<ADMIN_API_TOKEN>`
-
-Il backend rifiuta l'accesso amministrativo se una variabile non è configurata.
