@@ -47,8 +47,8 @@ jobs:
           CATALOG_SOURCES_PER_RUN: "0"
           CATALOG_ADAPTER_BUDGET_SECONDS: "0"
           TARGET_HEALTH_SOURCES_PER_RUN: "0"
-          # The 51 targeted health sources share a 12-minute crawl budget.
-          TARGET_HEALTH_BUDGET_SECONDS: "720"
+          # The 51 targeted health sources share a 20-minute crawl budget.
+          TARGET_HEALTH_BUDGET_SECONDS: "1200"
           DEEP_ADAPTER_SOURCES_PER_RUN: "0"
           # Zero means: every deep hospital/PAT source is attempted nightly.
           DEEP_ADAPTER_BUDGET_SECONDS: "0"
